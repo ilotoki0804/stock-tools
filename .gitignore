@@ -1,0 +1,21 @@
+# exclude all files that starts with '_...'
+_*.*
+_*/
+# reinclude all files that starts with '___...' (e.g. __init__.py)
+!__*.*
+/.vscode
+*~
+.#*
+\#*
+.tox
+dist/
+.eggs/
+build/
+*.pyc
+*.pyo
+*.egg
+*.egg-info
+
+token.dat
+/.stock
+keys.json
