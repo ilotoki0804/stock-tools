@@ -24,26 +24,77 @@
 
 from __future__ import annotations
 import logging
-from typing import Literal, NamedTuple
+from typing import Literal, Generic, TypeVar
+from dataclasses import dataclass
 
 
-class PriceUnit(NamedTuple):
-    start: int
-    stop: int | None
+Start = TypeVar('Start', int, None)
+Stop = TypeVar('Stop', int, None)
+
+
+@dataclass(unsafe_hash=True)
+class RangePlus(Generic[Start, Stop]):
+    start: Start
+    stop: Stop
     step: int
+    infinite: bool = False
 
-    def is_in_range(self, price):
-        return self.start <= price and (self.stop is None or price < self.stop)
+    def __post_init__(self) -> None:
+        if self.start is None and self.stop is None:
+            raise TypeError('Start and stop cannot be None at same time.')
+        if (self.start is not None
+                and self.stop is not None
+                and self.infinite
+                and (value_unmatched := (self.stop - self.start) % self.step) != 0):
+            raise ValueError('Start and stop is not associate with each other. '
+                             f'(stop - start) % step == {value_unmatched}')
+        self._step_start = self.stop if self.start is None else self.start
+        self.curr_value: int | None = None
 
-    def __contains__(self, price):
+    def is_in_range(self, price: int) -> bool:
+        return (self.start is None or self.start <= price) and (self.stop is None or price < self.stop)
+
+    def __contains__(self, price: int) -> bool:
+        if self.infinite:
+            assert self._step_start is not None
+            return (price - self._step_start) % self.step == 0
+
         if self.stop is None:
+            assert self.start is not None
             return self.is_in_range(price) and (price - self.start) % self.step == 0
-        else:
-            return price in range(self.start, self.stop, self.step)
+
+        if self.start is None:
+            return self.is_in_range(price) and (price - self.stop) % self.step == 0
+
+        return price in range(self.start, self.stop, self.step)
+
+    def __hash__(self) -> int:
+        if self.curr_value is not None:
+            raise TypeError("RangePlus cannot be hashed when it becomes iterator.")
+        return super().__hash__()
+
+    def __iter__(self) -> RangePlus:
+        if self.start is None:
+            raise ValueError("Cannot iterate because start is None.")
+        new = RangePlus(self.start, self.stop, self.step, self.infinite)
+        new.curr_value = self.start
+        return new
+
+    def __next__(self) -> int:
+        if self.curr_value is None:
+            raise TypeError("Cannot iterate because it's not passed through iter().")
+
+        self.curr_value += self.step
+        if self.stop is not None and self.curr_value >= self.stop:
+            raise StopIteration
+
+        return self.curr_value
 
 
-PRICE_UNITS = {PriceUnit(1, 2000, 1), PriceUnit(2000, 5000, 5), PriceUnit(5000, 20000, 10), PriceUnit(20_000, 50_000, 50),
-               PriceUnit(50_000, 200_000, 1000), PriceUnit(200_000, 500_000, 500), PriceUnit(500_000, None, 1000)}
+PRICE_UNITS: set[RangePlus[int, int] | RangePlus[int, None]] = {
+    RangePlus(1, 2000, 1), RangePlus(2000, 5000, 5), RangePlus(5000, 20000, 10), RangePlus(20_000, 50_000, 50),
+    RangePlus(50_000, 200_000, 1000), RangePlus(200_000, 500_000, 500), RangePlus(500_000, None, 1000)
+}
 
 
 def adjust_price_unit(
