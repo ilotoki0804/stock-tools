@@ -29,14 +29,14 @@ def emulate_trade(
     for day_diff in range((min(dates) - standard_date).days, (max(dates) - standard_date).days + 1):
         date = standard_date + timedelta(day_diff)
         if not only_if_transaction and date not in dates:
-            states.append(State.easy_make(price_cache, date, states[-1], None))
+            states.append(State.from_state_and_transaction(price_cache, date, states[-1], None))
             continue
 
         transactions_of_this_date = transactions_df[transactions_df['date'] == date]
         # sourcery skip
         for i in range(len(transactions_of_this_date.index)):  # df.index는 1부터 시작할 수도 있지만 iloc은 무조건 0부터 시작함.
             states.append(
-                State.easy_make(
+                State.from_state_and_transaction(
                     price_cache,
                     date,
                     states[-1],

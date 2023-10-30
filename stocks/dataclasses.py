@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Literal
+from typing import Literal, Annotated
 from dataclasses import dataclass
 import logging
 
@@ -53,19 +53,20 @@ class Transaction:
 
 @dataclass
 class State:
-    """
+    """해당 날짜나 거래 후의 상태를 나타내는 dataclass입니다.
+
     stocks의 count는 음수가 될 수도 있습니다.
     """
     date: datetime
     total_appraisement: int
     budget: int
     stock_appraisement: int
-    stocks: dict[str, tuple[int, int]]  # dict[company_code, tuple[count, price]] # price_diff도 추가할 수 있음.
+    stocks: dict[str, tuple[Annotated[int, 'count'], Annotated[int, 'price']]]
     privous_state: 'State'
     transaction: Transaction | None
 
     @classmethod
-    def easy_make(
+    def from_state_and_transaction(
         cls,
         price_cache: PriceCache,
         date: datetime,
