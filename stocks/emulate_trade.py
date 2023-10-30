@@ -11,7 +11,7 @@ def emulate_trade(
     price_cache: PriceCache,
     transactions: list[Transaction] | pd.DataFrame,
     initial_state: State | None = None,
-    only_if_transaction: bool = False,
+    only_if_transaction_exists: bool = False,
 ) -> list[State]:
     """거래를 모사해 거래의 결과와 진행 상황을 확인합니다. transactions와 관련한 설명은 Transaction dataclass를 확인하세요.
 
@@ -39,7 +39,7 @@ def emulate_trade(
         (min(dates) - standard_date).days, (max(dates) - standard_date).days + 1
     ):
         date = standard_date + timedelta(day_diff)
-        if not only_if_transaction and date not in dates:
+        if not only_if_transaction_exists and date not in dates:
             states.append(
                 State.from_state_and_transaction(price_cache, date, states[-1], None)
             )
