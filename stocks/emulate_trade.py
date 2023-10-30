@@ -24,23 +24,29 @@ def emulate_trade(
     transactions_df = pd.DataFrame(transactions)
 
     states = [INITIAL_STATE]
-    dates: set[datetime] = set(transactions_df['date'].unique())
+    dates: set[datetime] = set(transactions_df["date"].unique())
     # min과 max 대신 transactions_df['date'][0]와 transactions_df['date'][-1]를 사용할 수도 있음.
-    for day_diff in range((min(dates) - standard_date).days, (max(dates) - standard_date).days + 1):
+    for day_diff in range(
+        (min(dates) - standard_date).days, (max(dates) - standard_date).days + 1
+    ):
         date = standard_date + timedelta(day_diff)
         if not only_if_transaction and date not in dates:
-            states.append(State.from_state_and_transaction(price_cache, date, states[-1], None))
+            states.append(
+                State.from_state_and_transaction(price_cache, date, states[-1], None)
+            )
             continue
 
-        transactions_of_this_date = transactions_df[transactions_df['date'] == date]
+        transactions_of_this_date = transactions_df[transactions_df["date"] == date]
         # sourcery skip
-        for i in range(len(transactions_of_this_date.index)):  # df.index는 1부터 시작할 수도 있지만 iloc은 무조건 0부터 시작함.
+        for i in range(
+            len(transactions_of_this_date.index)
+        ):  # df.index는 1부터 시작할 수도 있지만 iloc은 무조건 0부터 시작함.
             states.append(
                 State.from_state_and_transaction(
                     price_cache,
                     date,
                     states[-1],
-                    Transaction(*transactions_of_this_date.iloc[i - 1])
+                    Transaction(*transactions_of_this_date.iloc[i - 1]),
                 )
             )
 

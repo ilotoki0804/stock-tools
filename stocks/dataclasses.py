@@ -7,10 +7,10 @@ from . import PriceCache
 from .exceptions import InvalidPriceError
 
 SIGNIFICANT_PRICE_NAMES = {
-    'low': 'stck_lwpr',
-    'high': 'stck_hgpr',
-    'open': 'stck_oprc',
-    'close': 'stck_clpr',
+    "low": "stck_lwpr",
+    "high": "stck_hgpr",
+    "open": "stck_oprc",
+    "close": "stck_clpr",
 }
 
 
@@ -26,10 +26,11 @@ class Transaction:
             고가, 저가, 시가, 종가 중에 선택할 수 있고, 만약 값을 직접 설정하고 싶다면 직접 가격을 입력할 수 있습니다.
             직접 설정한 가격이 고가보다 높거나 저가보다 낮으면 `InvalidPriceError`를 냅니다.
     """
+
     date: datetime
     company_code: str
     amount: int
-    sell_price: Literal['low', 'high', 'open', 'close'] | int
+    sell_price: Literal["low", "high", "open", "close"] | int
     _is_sell_price_evaluated: bool = False
 
     def evaluate_sell_price(self, price: dict) -> None:
@@ -42,11 +43,15 @@ class Transaction:
             self.is_sell_price_evaluated = True
             return
 
-        if price[SIGNIFICANT_PRICE_NAMES['low']] <= self.sell_price <= price[SIGNIFICANT_PRICE_NAMES['high']]:
+        if (
+            price[SIGNIFICANT_PRICE_NAMES["low"]]
+            <= self.sell_price
+            <= price[SIGNIFICANT_PRICE_NAMES["high"]]
+        ):
             return
 
         raise InvalidPriceError(
-            'Manual sell_price should be lower then or equal to highest price and greater then or equal to lowest price in daily.'
+            "Manual sell_price should be lower then or equal to highest price and greater then or equal to lowest price in daily."
             f"sell_price: {self.sell_price}, highest price: {SIGNIFICANT_PRICE_NAMES['high']}, lowest price: {SIGNIFICANT_PRICE_NAMES['low']}"
         )
 
@@ -57,12 +62,13 @@ class State:
 
     stocks의 count는 음수가 될 수도 있습니다.
     """
+
     date: datetime
     total_appraisement: int
     budget: int
     stock_appraisement: int
-    stocks: dict[str, tuple[Annotated[int, 'count'], Annotated[int, 'price']]]
-    privous_state: 'State'
+    stocks: dict[str, tuple[Annotated[int, "count"], Annotated[int, "price"]]]
+    privous_state: "State"
     transaction: Transaction | None
 
     @classmethod
@@ -70,7 +76,7 @@ class State:
         cls,
         price_cache: PriceCache,
         date: datetime,
-        privous_state: 'State',
+        privous_state: "State",
         transaction: Transaction | None,
     ) -> "State":
         budget = privous_state.budget
@@ -78,22 +84,29 @@ class State:
             stocks = privous_state.stocks
             transaction_company = None
         else:
-            evaluated_price = price_cache.get_price(date, transaction.company_code, None, 'past')[0]
+            evaluated_price = price_cache.get_price(
+                date, transaction.company_code, None, "past"
+            )[0]
 
             transaction.evaluate_sell_price(evaluated_price)
-            assert isinstance(transaction.sell_price, int), "Maybe evaluate_sell_price didn't work well."
+            assert isinstance(
+                transaction.sell_price, int
+            ), "Maybe evaluate_sell_price didn't work well."
 
-            new_stock_count = privous_state.stocks.get(
-                transaction.company_code, (0, transaction.sell_price))[0] + transaction.amount
+            new_stock_count = (
+                privous_state.stocks.get(transaction.company_code, (0, transaction.sell_price))[0]
+                + transaction.amount
+            )
             if new_stock_count == 0:
                 stocks = privous_state.stocks.copy()
                 try:
                     del stocks[transaction.company_code]
                 except KeyError:
-                    print(f'KeyError occured. {stocks=}, {transaction.company_code=}')
+                    print(f"KeyError occured. {stocks=}, {transaction.company_code=}")
             else:
                 stocks = privous_state.stocks | {
-                    transaction.company_code: (new_stock_count, transaction.sell_price)}
+                    transaction.company_code: (new_stock_count, transaction.sell_price)
+                }
 
             budget -= transaction.amount * transaction.sell_price
             transaction_company = transaction.company_code
@@ -109,12 +122,23 @@ class State:
 
             # 주식 가격은 str으로 오기 때문에 int로 바꿔줘야 함.
             evaluated_single_price = int(
-                price_cache.get_price(date, company_code, None, 'past')[0][SIGNIFICANT_PRICE_NAMES['close']])
+                price_cache.get_price(date, company_code, None, "past")[0][
+                    SIGNIFICANT_PRICE_NAMES["close"]
+                ]
+            )
 
             new_stocks[company_code] = count, evaluated_single_price
             stock_appraisement += count * evaluated_single_price
 
-        return cls(date, budget + stock_appraisement, budget, stock_appraisement, new_stocks, privous_state, transaction)
+        return cls(
+            date,
+            budget + stock_appraisement,
+            budget,
+            stock_appraisement,
+            new_stocks,
+            privous_state,
+            transaction,
+        )
 
 
 INITIAL_STATE = State(datetime(1900, 1, 1), 0, 0, 0, {}, None, None)  # type: ignore  # TODO: State의 prev_state에 None 가능하게 하기

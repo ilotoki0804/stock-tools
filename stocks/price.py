@@ -28,8 +28,8 @@ from typing import Literal, Generic, TypeVar
 from dataclasses import dataclass
 
 
-Start = TypeVar('Start', int, None)
-Stop = TypeVar('Stop', int, None)
+Start = TypeVar("Start", int, None)
+Stop = TypeVar("Stop", int, None)
 
 
 @dataclass(unsafe_hash=True)
@@ -41,18 +41,24 @@ class RangePlus(Generic[Start, Stop]):
 
     def __post_init__(self) -> None:
         if self.start is None and self.stop is None:
-            raise TypeError('Start and stop cannot be None at same time.')
-        if (self.start is not None
-                and self.stop is not None
-                and self.infinite
-                and (value_unmatched := (self.stop - self.start) % self.step) != 0):
-            raise ValueError('Start and stop is not associate with each other. '
-                             f'(stop - start) % step == {value_unmatched}')
+            raise TypeError("Start and stop cannot be None at same time.")
+        if (
+            self.start is not None
+            and self.stop is not None
+            and self.infinite
+            and (value_unmatched := (self.stop - self.start) % self.step) != 0
+        ):
+            raise ValueError(
+                "Start and stop is not associate with each other. "
+                f"(stop - start) % step == {value_unmatched}"
+            )
         self._step_start = self.stop if self.start is None else self.start
         self.curr_value: int | None = None
 
     def is_in_range(self, price: int) -> bool:
-        return (self.start is None or self.start <= price) and (self.stop is None or price < self.stop)
+        return (self.start is None or self.start <= price) and (
+            self.stop is None or price < self.stop
+        )
 
     def __contains__(self, price: int) -> bool:
         if self.infinite:
@@ -87,14 +93,19 @@ class RangePlus(Generic[Start, Stop]):
 
 
 PRICE_UNITS: set[RangePlus[int, int] | RangePlus[int, None]] = {
-    RangePlus(1, 2000, 1), RangePlus(2000, 5000, 5), RangePlus(5000, 20000, 10), RangePlus(20_000, 50_000, 50),
-    RangePlus(50_000, 200_000, 1000), RangePlus(200_000, 500_000, 500), RangePlus(500_000, None, 1000)
+    RangePlus(1, 2000, 1),
+    RangePlus(2000, 5000, 5),
+    RangePlus(5000, 20000, 10),
+    RangePlus(20_000, 50_000, 50),
+    RangePlus(50_000, 200_000, 1000),
+    RangePlus(200_000, 500_000, 500),
+    RangePlus(500_000, None, 1000),
 }
 
 
 def adjust_price_unit(
     price: int,
-    mode: Literal['round', 'floor', 'ceil'] = 'round',
+    mode: Literal["round", "floor", "ceil"] = "round",
     error: bool = False,
     alert: bool = False,
 ) -> int:
@@ -131,26 +142,32 @@ def adjust_price_unit(
             curr_price_unit = price_unit
             is_price_unit_matched = price in price_unit
 
-    assert curr_price_unit is not None, 'No matched price unit. Code has vulnerability.'
+    assert curr_price_unit is not None, "No matched price unit. Code has vulnerability."
 
     if is_price_unit_matched:
         return price
 
     diff = (price - curr_price_unit.start) % curr_price_unit.step
-    if mode == 'round':
+    if mode == "round":
         if curr_price_unit.step / 2 <= diff:
             adjusted_price = price - diff + curr_price_unit.step
         else:
             adjusted_price = price - diff
-    elif mode == 'floor':
+    elif mode == "floor":
         adjusted_price = price - diff
-    elif mode == 'ceil':
+    elif mode == "ceil":
         adjusted_price = price - diff + curr_price_unit.step
     else:
         raise TypeError(f"Unknown mode '{mode}'.")
 
     if error:
-        raise ValueError(f"Price is not matched in any price unit. Adjust value in order to match price unit like: {adjusted_price}({mode} mode).")
+        raise ValueError(
+            "Price is not matched in any price unit. Adjust value in order to match price unit like: "
+            f"{adjusted_price}({mode} mode)."
+        )
     if alert:
-        logging.warning(f"Price is not matched in any price unit. Price has been adjusted from {price} to {adjusted_price}({mode} mode).")
+        logging.warning(
+            "Price is not matched in any price unit. "
+            f"Price has been adjusted from {price} to {adjusted_price}({mode} mode)."
+        )
     return adjusted_price

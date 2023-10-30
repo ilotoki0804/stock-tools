@@ -3,31 +3,35 @@ from typing import Literal
 
 import mojito
 
-DATE_FORMAT = r'%Y%m%d'
+DATE_FORMAT = r"%Y%m%d"
 
 
 def _fetch_prices_unsafe(
     broker: mojito.KoreaInvestment,
     company_code: str,
-    date_type: Literal['D', 'W', 'M'],
+    date_type: Literal["D", "W", "M"],
     start_day: datetime,
     end_day: datetime,
 ) -> list:
     """day_end 당일은 포함하지 않습니다. 조회할 데이터가 100을 넘어갈 경우의 안전성을 보장하지 않습니다."""
     end_day -= timedelta(1)
     response = broker.fetch_ohlcv(
-        company_code, date_type, start_day.strftime(DATE_FORMAT), end_day.strftime(DATE_FORMAT))
+        company_code,
+        date_type,
+        start_day.strftime(DATE_FORMAT),
+        end_day.strftime(DATE_FORMAT),
+    )
     try:
-        return response['output2']
+        return response["output2"]
     except KeyError:
-        raise ValueError(f"Data is not fetched properly. arguments: {(company_code, date_type, start_day.strftime(DATE_FORMAT), end_day.strftime(DATE_FORMAT))},"
-                         f"response: {response}")
+        values = company_code, date_type, start_day.strftime(DATE_FORMAT), end_day.strftime(DATE_FORMAT)
+        raise ValueError(f"Data is not fetched properly. arguments: {values}, response: {response}")
 
 
 def fetch_prices_by_datetime(
     broker: mojito.KoreaInvestment,
     company_code: str,
-    date_type: Literal['D', 'W', 'M'],
+    date_type: Literal["D", "W", "M"],
     start_day: datetime,
     end_day: datetime,
 ) -> list:
@@ -39,10 +43,13 @@ def fetch_prices_by_datetime(
     result = []
 
     fraction_start = start_day
-    fraction_end = start_day + timedelta(100)  # 100을 넣는다고 조회되는 데이터 수가 100인 건 아니지만(due to 휴일) 최소한 100은 안전하고 계산하기 쉬움.
+    # 100을 넣는다고 조회되는 데이터 수가 100인 건 아니지만(due to 휴일) 최소한 100은 안전하고 계산하기 쉬움.
+    fraction_end = start_day + timedelta(100)
     while fraction_start < end_day:
         print(fraction_start.strftime(DATE_FORMAT), fraction_end.strftime(DATE_FORMAT))
-        result += _fetch_prices_unsafe(broker, company_code, date_type, fraction_start, fraction_end)
+        result += _fetch_prices_unsafe(
+            broker, company_code, date_type, fraction_start, fraction_end
+        )
 
         fraction_start = fraction_end
         fraction_end += timedelta(100)

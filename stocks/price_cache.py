@@ -12,7 +12,11 @@ MAX_DATE_LIMIT = 100
 
 
 class PriceCache:
-    def __init__(self, broker: mojito.KoreaInvestment, default_company_code: str | None = None) -> None:
+    def __init__(
+        self,
+        broker: mojito.KoreaInvestment,
+        default_company_code: str | None = None,
+    ) -> None:
         """company_code가 None이라면 get_price에서 company_code는 생략할 수 없습니다."""
         self.broker = broker
         self.default_company_code = default_company_code
@@ -26,7 +30,10 @@ class PriceCache:
         self._cache.clear()
 
     @staticmethod
-    def _get_day_category(day: datetime, standard_day: datetime) -> tuple[int, tuple[datetime, datetime]]:
+    def _get_day_category(
+        day: datetime,
+        standard_day: datetime,
+    ) -> tuple[int, tuple[datetime, datetime]]:
         date_category, mod = divmod((day - standard_day).days, 100)
 
         start_day = day - timedelta(mod)
@@ -36,12 +43,16 @@ class PriceCache:
 
     def _store_cache_of_day(self, day: datetime, company_code: str) -> int:
         """캐시에 해당 day에 대한 캐시를 저장하고 date_category를 반환합니다."""
-        date_category, (start_day, end_day) = self._get_day_category(day, self._standard_day)
+        date_category, (start_day, end_day) = self._get_day_category(
+            day, self._standard_day
+        )
 
         if (company_code, date_category) in self._cache:
             return date_category  # Cache hit!
 
-        self._cache[(company_code, date_category)] = _fetch_prices_unsafe(self.broker, company_code, 'D', start_day, end_day)
+        self._cache[(company_code, date_category)] = _fetch_prices_unsafe(
+            self.broker, company_code, "D", start_day, end_day
+        )
         return date_category
 
     def get_price(
@@ -49,7 +60,7 @@ class PriceCache:
         day: datetime,
         company_code: str | None = None,
         nearest_day_threshold: int | None = 0,
-        date_direction: Literal['past', 'future', 'both'] = 'both'
+        date_direction: Literal["past", "future", "both"] = "both",
     ) -> tuple[dict, datetime]:
         """해당 날짜의 데이터를 가져옵니다. 이때 만약 캐시된 데이터가 있다면 캐시를 사용합니다.
         주의: nearest_day_threshold가 자연수일 때는 NoDateError 대신 NoNearestDateError가 납니다.
@@ -76,37 +87,53 @@ class PriceCache:
             self._is_standard_day_smartly_defined = True
 
         company_code = company_code or self.default_company_code
-        assert company_code, '`company_code` should be specified. Give `company code` to parameter or set `default_company_code`.'
+        assert (
+            company_code
+        ), "`company_code` should be specified. Give `company code` to parameter or set `default_company_code`."
 
         date_category = self._store_cache_of_day(day, company_code)
 
-        price_data = pd.DataFrame(self._cache[(company_code, date_category)])  # TODO: dataframe을 미리 만들어서 넣기
-        result = price_data[price_data['stck_bsop_date'] == day.strftime(DATE_FORMAT)]
+        price_data = pd.DataFrame(
+            self._cache[(company_code, date_category)]
+        )  # TODO: dataframe을 미리 만들어서 넣기
+        result = price_data[price_data["stck_bsop_date"] == day.strftime(DATE_FORMAT)]
         if not result.empty:
             return result.squeeze().to_dict(), day
 
         day_diff = None
-        for day_diff in range(1, (MAX_DATE_LIMIT if nearest_day_threshold is None else nearest_day_threshold) + 1):
-            if date_direction in {'future', 'both'}:
+        for day_diff in range(
+            1,
+            (MAX_DATE_LIMIT if nearest_day_threshold is None else nearest_day_threshold)
+            + 1,
+        ):
+            if date_direction in {"future", "both"}:
                 try:
-                    return_value = self.get_price(day + timedelta(day_diff), company_code, nearest_day_threshold=0)
+                    return_value = self.get_price(
+                        day + timedelta(day_diff), company_code, nearest_day_threshold=0
+                    )
                 except NoTransactionError:
                     pass
                 else:
-                    print(f'Get price from {day + timedelta(day_diff)} instead {day}.')
+                    print(f"Get price from {day + timedelta(day_diff)} instead {day}.")
                     return return_value
 
-            if date_direction in {'past', 'both'}:
+            if date_direction in {"past", "both"}:
                 try:
-                    return_value = self.get_price(day - timedelta(day_diff), company_code, nearest_day_threshold=0)
+                    return_value = self.get_price(
+                        day - timedelta(day_diff), company_code, nearest_day_threshold=0
+                    )
                 except NoTransactionError:
                     pass
                 else:
-                    print(f'Get price from {day - timedelta(day_diff)} instead {day}.')
+                    print(f"Get price from {day - timedelta(day_diff)} instead {day}.")
                     return return_value
 
         if day_diff is None:
-            raise NoTransactionError(f"When {day}, there's no transaction. "
-                                     "Increase `nearest_day_threshold` if you want to get near data.")
+            raise NoTransactionError(
+                f"When {day}, there's no transaction. "
+                "Increase `nearest_day_threshold` if you want to get near data."
+            )
 
-        raise NoTransactionError(f"There's no transactions between {day - timedelta(day_diff)} and {day + timedelta(day_diff)}.")
+        raise NoTransactionError(
+            f"There's no transactions between {day - timedelta(day_diff)} and {day + timedelta(day_diff)}."
+        )
