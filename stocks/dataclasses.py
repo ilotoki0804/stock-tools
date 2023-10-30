@@ -67,7 +67,7 @@ class State:
     total_appraisement: int
     budget: int
     stocks: dict[str, tuple[Annotated[int, "count"], Annotated[int, "price"]]]
-    privous_state: "State"
+    privous_state: "State | None"
     transaction: Transaction | None
 
     @classmethod
@@ -75,11 +75,15 @@ class State:
         cls,
         price_cache: PriceCache,
         date: datetime,
-        privous_state: "State",
+        privous_state: "State | None",
         transaction: Transaction | None,
     ) -> "State":
-        budget = privous_state.budget
-        if transaction is None:
+        if privous_state is None:
+            budget = 0
+            stocks = {}
+            transaction_company = None
+        elif transaction is None:
+            budget = privous_state.budget
             stocks = privous_state.stocks
             transaction_company = None
         else:
@@ -107,7 +111,7 @@ class State:
                     transaction.company_code: (new_stock_count, transaction.sell_price)
                 }
 
-            budget -= transaction.amount * transaction.sell_price
+            budget = privous_state.budget - transaction.amount * transaction.sell_price
             transaction_company = transaction.company_code
 
         new_stocks = {}
@@ -139,4 +143,4 @@ class State:
         )
 
 
-INITIAL_STATE = State(datetime(1900, 1, 1), 0, 0, {}, None, None)  # type: ignore  # TODO: State의 prev_state에 None 가능하게 하기
+INITIAL_STATE = State(datetime(1900, 1, 1), 0, 0, {}, None, None)
