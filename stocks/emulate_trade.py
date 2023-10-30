@@ -25,6 +25,7 @@ def emulate_trade(
 
     Returns:
         State의 list를 반환합니다. Dataframe이 아니라는 점을 주의하세요.
+        해당 리스트는 시간 순서대로 배열되지만 만약 해당 날짜에 transaction이 여러 개 있다면 date가 겹칠 수 있습니다.
     """
     standard_date = datetime(1970, 1, 1)
     initial_state = initial_state or INITIAL_STATE

@@ -13,7 +13,7 @@ def _fetch_prices_unsafe(
     start_day: datetime,
     end_day: datetime,
 ) -> list:
-    """day_end 당일은 포함하지 않습니다. 조회할 데이터가 100을 넘어갈 경우의 안전성을 보장하지 않습니다."""
+    """fetch_prices_by_datetime와 거의 같지만 조회할 데이터가 100을 넘어갈 경우의 안전성을 보장하지 않습니다."""
     end_day -= timedelta(1)
     response = broker.fetch_ohlcv(
         company_code,
@@ -39,6 +39,7 @@ def fetch_prices_by_datetime(
 
     * string 대신 datetime.datetime을 이용합니다.
     * end_day에 end_day 당일이 포함되지 않습니다.
+    * 쿼리가 100개가 넘더라도 상관없이 불러옵니다.
     """
     result = []
 

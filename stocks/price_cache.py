@@ -12,6 +12,7 @@ MAX_DATE_LIMIT = 100
 
 
 class PriceCache:
+    """Price를 가지고 올 때마다 fetch하지 않고 caching을 이용해 더욱 빠르고 간편하게 정보를 가져올 수 있도록 하는 클래스입니다."""
     def __init__(
         self,
         broker: mojito.KoreaInvestment,
