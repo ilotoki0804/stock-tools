@@ -83,7 +83,7 @@ class PriceCache:
         company_code: str | None = None,
         nearest_day_threshold: int | None = 0,
         date_direction: Literal["past", "future", "both"] = "both",
-    ) -> tuple[PriceDict, datetime]:
+    ) -> PriceDict:
         """해당 날짜의 데이터를 가져옵니다. 이때 만약 캐시된 데이터가 있다면 캐시를 사용합니다.
         주의: nearest_day_threshold가 자연수일 때는 NoDateError 대신 NoNearestDateError가 납니다.
 
@@ -118,7 +118,7 @@ class PriceCache:
         price_data = self._cache[(company_code, date_category)]
         result = price_data[price_data["stck_bsop_date"] == day.strftime(DATE_FORMAT)]
         if not result.empty:
-            return result.squeeze().to_dict(), day
+            return result.squeeze().to_dict()
 
         day_diff = None
         for day_diff in range(

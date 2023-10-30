@@ -108,7 +108,7 @@ class State:
         else:
             evaluated_price = price_cache.get_price(
                 date, transaction.company_code, None, "past"
-            )[0]
+            )
 
             transaction.evaluate_sell_price(evaluated_price)
             assert isinstance(
@@ -144,7 +144,7 @@ class State:
 
             # 주식 가격은 str으로 오기 때문에 int로 바꿔줘야 함.
             evaluated_single_price = int(
-                price_cache.get_price(date, company_code, None, "past")[0][
+                price_cache.get_price(date, company_code, None, "past")[
                     SIGNIFICANT_PRICE_NAMES["close"]
                 ]
             )
