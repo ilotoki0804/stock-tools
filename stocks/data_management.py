@@ -1,10 +1,26 @@
 from __future__ import annotations
 from datetime import datetime, timedelta
-from typing import Literal
+from typing import Literal, TypedDict
 
 import mojito
 
 DATE_FORMAT = r"%Y%m%d"
+
+
+class PriceDict(TypedDict):
+    stck_bsop_date: str
+    stck_clpr: str
+    stck_oprc: str
+    stck_hgpr: str
+    stck_lwpr: str
+    acml_vol: str
+    acml_tr_pbmn: str
+    flng_cls_code: str
+    prtt_rate: str
+    mod_yn: str
+    prdy_vrss_sign: str
+    prdy_vrss: str
+    revl_issu_reas: str
 
 
 def _fetch_prices_unsafe(
@@ -13,7 +29,7 @@ def _fetch_prices_unsafe(
     date_type: Literal["D", "W", "M"],
     start_day: datetime,
     end_day: datetime,
-) -> list:
+) -> list[PriceDict]:
     """fetch_prices_by_datetime와 거의 같지만 조회할 데이터가 100을 넘어갈 경우의 안전성을 보장하지 않습니다."""
     end_day -= timedelta(1)
     response = broker.fetch_ohlcv(
@@ -35,7 +51,7 @@ def fetch_prices_by_datetime(
     date_type: Literal["D", "W", "M"],
     start_day: datetime,
     end_day: datetime,
-) -> list:
+) -> list[PriceDict]:
     """broker.fetch_ohlcv의 결과값을 조금 더 편리하게 사용할 수 있도록 변경한 함수입니다.
 
     * string 대신 datetime.datetime을 이용합니다.

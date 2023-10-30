@@ -6,6 +6,7 @@ import logging
 
 from . import PriceCache, adjust_price_unit
 from .exceptions import InvalidPriceError
+from .data_management import PriceDict
 
 SIGNIFICANT_PRICE_NAMES = {
     "low": "stck_lwpr",
@@ -36,7 +37,7 @@ class Transaction:
 
     def evaluate_sell_price(
         self,
-        price: dict,
+        price: PriceDict,
         check_price_unit: bool = False,
         alert: bool = True,
         **adjust_price_unit_kwargs
