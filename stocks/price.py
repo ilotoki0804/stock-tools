@@ -87,7 +87,7 @@ class RangePlus(Iterable, Generic[Start, Stop]):
             raise ValueError("Cannot iterate because start is None or front and back is infinite.")
 
         curr_value = self.start
-        while True if self.stop is None else (curr_value < self.stop):
+        while self.stop is None or curr_value < self.stop:
             yield curr_value
             curr_value += self.step
 
