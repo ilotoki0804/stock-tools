@@ -24,6 +24,14 @@ class PriceCache:
         self._is_standard_day_smartly_defined = False
         self._cache: dict[tuple[str, int], list] = {}
 
+    @classmethod
+    def from_broker_kwargs(
+        cls,
+        default_company_code: str | None = None,
+        **kwargs,
+    ) -> "PriceCache":
+        return cls(mojito.KoreaInvestment(**kwargs), default_company_code)
+
     def set_standard_day(self, standard_day: datetime):
         """주의: 기존의 모든 cache가 삭제됩니다. standard_day는 임의의 날짜로 정할 수 있습니다(제약이 없습니다)."""
         self._standard_day = standard_day
