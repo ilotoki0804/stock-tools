@@ -22,7 +22,7 @@ class PriceCache:
         self.default_company_code = default_company_code
         self._standard_day = datetime(1970, 1, 1)
         self._is_standard_day_smartly_defined = False
-        self._cache: dict[tuple[str, int], list] = {}
+        self._cache: dict[tuple[str, int], pd.DataFrame] = {}  # == dict[tuple[str, int], pd.DataFrame(list)]
 
     @classmethod
     def from_broker_kwargs(
@@ -58,9 +58,9 @@ class PriceCache:
         if (company_code, date_category) in self._cache:
             return date_category  # Cache hit!
 
-        self._cache[(company_code, date_category)] = _fetch_prices_unsafe(
+        self._cache[(company_code, date_category)] = pd.DataFrame(_fetch_prices_unsafe(
             self.broker, company_code, "D", start_day, end_day
-        )
+        ))
         return date_category
 
     def get_price(
@@ -101,9 +101,7 @@ class PriceCache:
 
         date_category = self._store_cache_of_day(day, company_code)
 
-        price_data = pd.DataFrame(
-            self._cache[(company_code, date_category)]
-        )  # TODO: dataframe을 미리 만들어서 넣기
+        price_data = self._cache[(company_code, date_category)]
         result = price_data[price_data["stck_bsop_date"] == day.strftime(DATE_FORMAT)]
         if not result.empty:
             return result.squeeze().to_dict(), day
