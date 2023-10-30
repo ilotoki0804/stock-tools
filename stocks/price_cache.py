@@ -7,6 +7,7 @@ import pandas as pd
 
 from .data_management import DATE_FORMAT, _fetch_prices_unsafe, PriceDict
 from .exceptions import NoTransactionError
+from . import KEY
 
 
 MAX_DATE_LIMIT = 100
@@ -36,6 +37,14 @@ class PriceCache:
         **kwargs,
     ) -> PriceCache:
         return cls(mojito.KoreaInvestment(**kwargs), default_company_code, alert_different_day)
+
+    @classmethod
+    def from_keys_json(
+        cls,
+        default_company_code: str | None = None,
+        alert_different_day: bool = False,
+    ):
+        return cls(mojito.KoreaInvestment(**KEY), default_company_code, alert_different_day)
 
     def set_standard_day(self, standard_day: datetime):
         """주의: 기존의 모든 cache가 삭제됩니다. standard_day는 임의의 날짜로 정할 수 있습니다(제약이 없습니다)."""

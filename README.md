@@ -88,7 +88,7 @@ Transaction의 상태에는 다음과 같은 것들이 있습니다.
 예를 들어 다음과 같이 Transaction을 정의할 수 있습니다.
 
 ```python
-from stocks.dataclasses import Transaction
+from stocks.transaction_and_state import Transaction
 from datetime import datetime
 
 Transaction(
@@ -129,7 +129,7 @@ State의 상태들은 다음과 같습니다.
 예를 들어 다음과 같이 State를 정의할 수 있습니다.
 
 ```python
-from stocks.dataclasses import State, Transaction
+from stocks.transaction_and_state import State, Transaction
 from datetime import datetime
 
 State(
@@ -146,10 +146,10 @@ State(
 
 ```python
 from stocks import KEY
-from stocks.dataclasses import State, Transaction, PriceCache
+from stocks.transaction_and_state import State, Transaction, PriceCache
 from datetime import datetime
 
-price_cache = PriceCache.from_broker_kwargs(**KEY)
+price_cache = PriceCache.from_keys_json(**KEY)
 
 State.from_state_and_transaction(
     price_cache,
@@ -173,10 +173,10 @@ from datetime import datetime
 import pandas as pd
 
 from stocks import KEY, PriceCache, emulate_trade
-from stocks.dataclasses import Transaction, State
+from stocks.transaction_and_state import Transaction, State
 
 # 하기 전에 keys.json이 있는지 꼭 확인하세요!!
-price_cache = PriceCache.from_broker_kwargs(**KEY)
+price_cache = PriceCache.from_keys_json()
 
 # 자신이 원하는 거래 내역을 여기에 설정해주세요.
 transactions = [
