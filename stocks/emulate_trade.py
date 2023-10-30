@@ -5,7 +5,7 @@ import mojito
 import pandas as pd
 
 from . import PriceCache
-from .dataclasses import SIGNIFICANT_PRICE_NAMES, Transaction, State, INITIAL_STATE
+from .transaction_and_state import SIGNIFICANT_PRICE_NAMES, Transaction, State, INITIAL_STATE
 
 
 def emulate_trade(
