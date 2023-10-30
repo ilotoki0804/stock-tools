@@ -63,6 +63,126 @@ broker = mojito.KoreaInvestment(**KEY)
 
 Repo 내 examples.py에는 어떻게 adjust_price_unit를 사용하는지와 매수, 매도를 어떻게 하는 지에 대한 예제가 있습니다. 해당 내용을 참고하세요.
 
+### 가격 불러오기
+
+가격을 불러오는 방식은 세 가지가 있습니다.
+
+1. transaction_and_state.PriceCache: 하루의 데이터를 알고 싶은 경우 사용
+1. data_management.fetch_prices_by_datetime: 기간의 데이터를 알고 싶은 경우 사용
+1. data_management._fetch_prices_unsafe: 위와 동일하고 더 빠르지만 100일 이상의 데이터를 불러올 수 없음.
+
+일반적으로 3번을 사용할 일은 적을 것이고 PriceCache나 fetch_prices_by_datetime을 사용하게 될 가능성이 높습니다.
+
+PriceCache과 fetch_prices_by_datetime의 차이점은 기간으로 불러올 수 있는지와 아닌지의 차이도 있지만 결정적인 것은 바로 캐싱의 여부입니다.
+캐싱이란 데이터를 서버에서 불러온 후 만약 이미 전에 불러온 데이터라면 서버를 경유하지 않고 미리 가지고 있던 데이터에서 가져오는 것을 의미합니다.
+fetch_prices_by_datetime는 캐싱이 되지 않지만 PriceCache는 캐싱이 됩니다.
+
+캐싱을 사용한다면 속도를 높일 수 있기 때문에 특별한 경우를 제외하면 fetch_prices_by_datetime 대신 PriceCache를 사용하는 것을 권장합니다.
+
+#### fetch_prices_by_datetime 사용하기
+
+fetch_prices_by_datetime은 다음과 같이 사용할 수 있습니다.
+
+```python
+from datetime import datetime
+import mojito
+from stocks.data_management import _fetch_prices_unsafe, fetch_prices_by_datetime
+
+broker = mojito.KoreaInvestment(**KEY)
+
+from datetime import datetime
+import mojito
+from stocks import KEY
+from stocks.data_management import _fetch_prices_unsafe, fetch_prices_by_datetime
+
+broker = mojito.KoreaInvestment(**KEY)
+
+fetch_prices_by_datetime(
+    broker=broker,
+    company_code="005930",  # 종목 코드
+    date_type='D',  # 일봉 사용 ('D', 'M', 'Y' 사용 가능)
+    start_day=datetime(2019, 5, 7),  # 2019년 5월 7일부터
+    end_day=datetime(2023, 2, 15),  # 2023년 2월 14일까지 (2월 15일 데이터는 포함되지 않음!!!)
+)
+```
+
+여기에서 주의해야 할 점은 파이썬의 `range()`나 slicing처럼 end_day에 그 당일은 포함되지 않는다는 점입니다.
+mojito 모듈과 이 부분에서 다르니 주의하세요.
+
+### PriceCache 사용하기
+
+PriceCache모듈은 다음과 같이 사용이 가능합니다.
+
+```python
+from stocks import PriceCache
+
+broker = mojito.KoreaInvestment(**KEY)
+price_cache = PriceCache(
+    broker=broker,
+    default_company_code=None,  # 기본 종목 코드. 만약 설정한다면 get_price에서 company_code를 설정하지 않아도 됨.
+    alert_different_day=False,  # 만약 기본 날짜와 다른 날짜가 나온다면 경고를 할 것인지 결정함. 나중에 삭제될 수 있음.
+)
+
+# 혹은 from_broker_kwargs를 사용할 수도 있습니다.
+price_cache = PriceCache.from_keys_json(
+    default_company_code='005930', # 기본 종목 코드가 설정되었기 때문에 get_price에서 company_code를 생략할 수도 있음.
+    alert_different_day=True,
+)
+
+price_cache.get_price(
+    # 값을 가져올 날짜
+    day=datetime(2020, 1, 4),
+
+    # 이 값은 만약 생략됐다면 default_company_code에 넘겨준 값을 사용하고, 만약 넘겨진 값이 없다면 오류가 남.
+    company_code="005930",
+
+    # 얼마나 가까운 날짜까지 사용할지 정함. None일 경우 100일로 설정됨.
+    nearest_day_threshold=None,
+
+    # 가져올 때 어느 방향으로 가져올지 정함. ('past': 과거의 데이터만, 'future' 미래의 데이터만, 'both': 양쪽 중 가까운 쪽)
+    date_direction="past",
+)
+```
+
+### 불러오는 데이터
+
+불러오는 데이터는 다음과 같습니다.
+
+```json
+{
+    "stck_bsop_date": "20200103",
+    "stck_clpr": "55500",
+    "stck_oprc": "56000",
+    "stck_hgpr": "56600",
+    "stck_lwpr": "54900",
+    "acml_vol": "15422255",
+    "acml_tr_pbmn": "860206709400",
+    "flng_cls_code": "00",
+    "prtt_rate": "0.00",
+    "mod_yn": "N",
+    "prdy_vrss_sign": "2",
+    "prdy_vrss": "300",
+    "revl_issu_reas": ""
+}
+```
+
+이 데이터는 api 원본 그대로로 각각의 의미는 다음과 같습니다. ([출처](https://apiportal.koreainvestment.com/apiservice/apiservice-domestic-stock-quotations#L_3cd9430c-e80e-4671-89a9-bd873dd047ae))
+
+* stck_bsop_date: 날짜
+* stck_clpr: 종가
+* stck_oprc: 시가
+* stck_hgpr: 고가
+* stck_lwpr: 저가
+* acml_vol: 누적 거래량
+* acml_tr_pbmn: 누적 거래 대금
+* prtt_rate: 분할 비율 (아마 액면분할 시 그 비율을 의미하는 것으로 보임)
+* mod_yn: 분할변경여부 (액면분할 여부로 추정됨)
+* prdy_vrss_sign: 전일 대비 부호 (1 : 상한, 2 : 상승, 3 : 보합, 4 : 하한, 5 : 하락)
+* prdy_vrss: 전일 대비
+* revl_issu_reas: 재평가사유코드
+
+모든 값을 일차적으로 string 결과를 반환한다는 점을 잊지 마세요.
+
 ### Transaction Dataclass
 
 Transaction은 한 독립적인 거래를 상징합니다.
