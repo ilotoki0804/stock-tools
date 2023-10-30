@@ -66,7 +66,6 @@ class State:
     date: datetime
     total_appraisement: int
     budget: int
-    stock_appraisement: int
     stocks: dict[str, tuple[Annotated[int, "count"], Annotated[int, "price"]]]
     privous_state: "State"
     transaction: Transaction | None
@@ -134,11 +133,10 @@ class State:
             date,
             budget + stock_appraisement,
             budget,
-            stock_appraisement,
             new_stocks,
             privous_state,
             transaction,
         )
 
 
-INITIAL_STATE = State(datetime(1900, 1, 1), 0, 0, 0, {}, None, None)  # type: ignore  # TODO: State의 prev_state에 None 가능하게 하기
+INITIAL_STATE = State(datetime(1900, 1, 1), 0, 0, {}, None, None)  # type: ignore  # TODO: State의 prev_state에 None 가능하게 하기
