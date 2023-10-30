@@ -1,2 +1,3 @@
 mojito2
 pandas
+matplotlib
