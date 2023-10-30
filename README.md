@@ -31,9 +31,9 @@ KEY를 사용하려면 루트 디렉토리에 `keys.json`이 있어야 합니다
 
 ```json
 {
-    "api_key": ...,
-    "api_secret": ...,
-    "acc_no": ...
+    "api_key": "...",
+    "api_secret": "...",
+    "acc_no": "..."
 }
 ```
 
