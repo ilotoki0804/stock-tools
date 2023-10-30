@@ -11,11 +11,11 @@
 
 기준가 | 호가단위
 -----|-----
-~2,000원 미만 | 1원 
+~2,000원 미만 | 1원
 2,000원 이상~5,000원 미만 | 5원
 5,000원 이상~20,000원 미만 | 10원
 20,000원 이상~50,000원 미만 | 50원
-50,000원 이상~200,000원 미만 | 100원 
+50,000원 이상~200,000원 미만 | 100원
 200,000원 이상~500,000원 미만 | 500원
 500,000원 이상 | 1,000원
 
@@ -67,11 +67,6 @@ class RangePlus(Generic[Start, Stop]):
             return self.is_in_range(price) and (price - self.stop) % self.step == 0
 
         return price in range(self.start, self.stop, self.step)
-
-    def __hash__(self) -> int:
-        if self.curr_value is not None:
-            raise TypeError("RangePlus cannot be hashed when it becomes iterator.")
-        return super().__hash__()
 
     def __iter__(self) -> RangePlus:
         if self.start is None:
