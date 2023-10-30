@@ -16,6 +16,7 @@ class PriceCache:
         self,
         broker: mojito.KoreaInvestment,
         default_company_code: str | None = None,
+        alert_different_day: bool = False,
     ) -> None:
         """company_code가 None이라면 get_price에서 company_code는 생략할 수 없습니다."""
         self.broker = broker
@@ -23,14 +24,16 @@ class PriceCache:
         self._standard_day = datetime(1970, 1, 1)
         self._is_standard_day_smartly_defined = False
         self._cache: dict[tuple[str, int], pd.DataFrame] = {}  # == dict[tuple[str, int], pd.DataFrame(list)]
+        self.alert_different_day = alert_different_day
 
     @classmethod
     def from_broker_kwargs(
         cls,
         default_company_code: str | None = None,
+        alert_different_day: bool = False,
         **kwargs,
     ) -> "PriceCache":
-        return cls(mojito.KoreaInvestment(**kwargs), default_company_code)
+        return cls(mojito.KoreaInvestment(**kwargs), default_company_code, alert_different_day)
 
     def set_standard_day(self, standard_day: datetime):
         """주의: 기존의 모든 cache가 삭제됩니다. standard_day는 임의의 날짜로 정할 수 있습니다(제약이 없습니다)."""
@@ -120,7 +123,8 @@ class PriceCache:
                 except NoTransactionError:
                     pass
                 else:
-                    print(f"Get price from {day + timedelta(day_diff)} instead {day}.")
+                    if self.alert_different_day:
+                        print(f"Get price from {day + timedelta(day_diff)} instead {day}.")
                     return return_value
 
             if date_direction in {"past", "both"}:
@@ -131,7 +135,8 @@ class PriceCache:
                 except NoTransactionError:
                     pass
                 else:
-                    print(f"Get price from {day - timedelta(day_diff)} instead {day}.")
+                    if self.alert_different_day:
+                        print(f"Get price from {day - timedelta(day_diff)} instead {day}.")
                     return return_value
 
         if day_diff is None:
