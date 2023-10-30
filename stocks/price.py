@@ -7,7 +7,7 @@
 예를 들어, 삼성전자의 현재가가 60,000원이라면 100 단위의 호가만 유효합니다.
 즉, 60,100, 60,200원은 정상적인 호가이지만 60,050원은 호가의 가격단위에 맞지 않아서 정상적으로 주문이 진행되지 않습니다.
 
-호가단위는 2023년 1월 25일에 다음과 같이 변경되었습니다.  ETF, ETN, ELW 상품은 5원 단위의 호가가격단위를 사용합니다. 
+호가단위는 2023년 1월 25일에 다음과 같이 변경되었습니다.  ETF, ETN, ELW 상품은 5원 단위의 호가가격단위를 사용합니다.
 
 기준가 | 호가단위
 -----|-----
@@ -148,6 +148,7 @@ def adjust_price_unit(
         return price
 
     diff = (price - curr_price_unit.start) % curr_price_unit.step
+    # sourcery skip
     if mode == "round":
         if curr_price_unit.step / 2 <= diff:
             adjusted_price = price - diff + curr_price_unit.step

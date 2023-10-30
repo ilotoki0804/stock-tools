@@ -1,3 +1,4 @@
+from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Literal
 
@@ -33,7 +34,7 @@ class PriceCache:
         default_company_code: str | None = None,
         alert_different_day: bool = False,
         **kwargs,
-    ) -> "PriceCache":
+    ) -> PriceCache:
         return cls(mojito.KoreaInvestment(**kwargs), default_company_code, alert_different_day)
 
     def set_standard_day(self, standard_day: datetime):

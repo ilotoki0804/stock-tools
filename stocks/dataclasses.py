@@ -1,3 +1,4 @@
+from __future__ import annotations
 from datetime import datetime, timedelta
 from typing import Literal, Annotated
 from dataclasses import dataclass
@@ -83,7 +84,7 @@ class State:
     total_appraisement: int
     budget: int
     stocks: dict[str, tuple[Annotated[int, "count"], Annotated[int, "price"]]]
-    privous_state: "State | None"
+    privous_state: State | None
     transaction: Transaction | None
 
     @classmethod
@@ -91,9 +92,9 @@ class State:
         cls,
         price_cache: PriceCache,
         date: datetime,
-        privous_state: "State | None",
+        privous_state: State | None,
         transaction: Transaction | None,
-    ) -> "State":
+    ) -> State:
         """몇 가지 정보를 주면 total_appraisement나 stocks을 계산해 주는 constructor입니다."""
         if privous_state is None:
             budget = 0
