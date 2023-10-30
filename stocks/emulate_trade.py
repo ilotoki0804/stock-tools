@@ -31,7 +31,7 @@ def emulate_trade(
 
     transactions_df = pd.DataFrame(transactions) if isinstance(transactions, list) else transactions
 
-    states = [INITIAL_STATE]
+    states = [initial_state]
     dates: set[datetime] = set(transactions_df["date"].unique())
     # min과 max 대신 transactions_df['date'][0]와 transactions_df['date'][-1]를 사용할 수도 있음.
     for day_diff in range(
