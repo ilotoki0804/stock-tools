@@ -5,7 +5,7 @@ from typing import Literal
 import mojito
 import pandas as pd
 
-from .data_management import DATE_FORMAT, _fetch_prices_unsafe, PriceDict
+from .fetch import DATE_FORMAT, _fetch_prices_unsafe, PriceDict
 from .exceptions import NoTransactionError
 from . import KEY
 
@@ -104,7 +104,7 @@ class PriceCache:
                 'both'라면 과거로부터의 가장 현재와 가까운 과거 혹은 미래의 정보를 불러옵니다.
                 만약 과거와 현재의 거리가 같다면 과거의 데이터를 우선으로 불러옵니다.
         """
-        if not self._is_standard_day_smartly_defined:
+        if not self._is_standard_day_smartly_defined and not self._cache:
             self._standard_day = day - timedelta(50)
             self._is_standard_day_smartly_defined = True
 
