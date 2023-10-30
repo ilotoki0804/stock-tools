@@ -3,7 +3,7 @@ from typing import Literal, Annotated
 from dataclasses import dataclass
 import logging
 
-from . import PriceCache
+from . import PriceCache, adjust_price_unit
 from .exceptions import InvalidPriceError
 
 SIGNIFICANT_PRICE_NAMES = {
@@ -33,8 +33,22 @@ class Transaction:
     sell_price: Literal["low", "high", "open", "close"] | int
     _is_sell_price_evaluated: bool = False
 
-    def evaluate_sell_price(self, price: dict) -> None:
-        """이 함수를 실행하면 sell_price가 무조건 정수 가격이 됩니다."""
+    def evaluate_sell_price(
+        self,
+        price: dict,
+        check_price_unit: bool = False,
+        alert: bool = True,
+        **adjust_price_unit_kwargs
+    ) -> None:
+        """이 함수를 실행하면 sell_price가 무조건 정수 가격이 됩니다.
+
+        Args:
+            price: 해당 날짜의 시가/종가/고가/저가 데이터가 담긴 딕셔너리입니다.
+            check_price_unit: 해당 값이 price_unit에 맞는지 확인합니다.
+            alert: adjust_price_unit 함수의 파라미터로 사용됩니다.
+                adjust_price_unit과는 달리 기본값이 True입니다.
+            **kwargs: adjust_price_unit 함수의 파라미터들입니다.
+        """
         if self._is_sell_price_evaluated:
             return
 
@@ -48,6 +62,8 @@ class Transaction:
             <= self.sell_price
             <= price[SIGNIFICANT_PRICE_NAMES["high"]]
         ):
+            if check_price_unit:
+                self.sell_price = adjust_price_unit(self.sell_price, alert=alert, **adjust_price_unit_kwargs)
             return
 
         raise InvalidPriceError(
@@ -78,6 +94,7 @@ class State:
         privous_state: "State | None",
         transaction: Transaction | None,
     ) -> "State":
+        """몇 가지 정보를 주면 total_appraisement나 stocks을 계산해 주는 constructor입니다."""
         if privous_state is None:
             budget = 0
             stocks = {}
