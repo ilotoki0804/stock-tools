@@ -124,18 +124,38 @@ State의 상태들은 다음과 같습니다.
 
 #### State 예시
 
+* 실제로 State를 직접 정의해야 하는 상황은 드믊니다. State가 무엇인지만 알면 충분합니다.
+
 예를 들어 다음과 같이 State를 정의할 수 있습니다.
 
 ```python
 from stocks.dataclasses import State, Transaction
+from datetime import datetime
 
 State(
-    date=datetime.datetime(2022, 6, 12),  # 2022년 6월 12일
+    date=datetime(2022, 6, 12),  # 2022년 6월 12일
     total_appraisement=994170,  # 총 평가액 994170원 (stocks에 의존하는 값)
     budget=249170,  # 주식 평가액을 포함하지 않은 예산 249170원
     stocks={'086520': (10, 74500)},  # 평가액 74500원의 삼성전자 주식 보유 중
     privous_state=State(...),  # 어떤 privous_state를 가짐
     transaction=None,  # 전 State와 이번 State 사이에 transaction은 없음.
+)
+```
+
+하지만 직접 State를 정의하는 것은 힘들기 때문에 `State.from_state_and_transaction`을 사용할 수 있습니다.
+
+```python
+from stocks import KEY
+from stocks.dataclasses import State, Transaction, PriceCache
+from datetime import datetime
+
+price_cache = PriceCache.from_broker_kwargs(**KEY)
+
+State.from_state_and_transaction(
+    price_cache,
+    datetime(2022, 6, 12),  # 2022년 6월 12일
+    None,  # 이전 상태 없음
+    Transaction(datetime(2023, 7, 15), '035720', -20, 'close'),  # 이러한 Transaction을 사용함.
 )
 ```
 
