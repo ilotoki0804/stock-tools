@@ -115,25 +115,5 @@ class State:
 
         return cls(date, budget + stock_appraisement, budget, stock_appraisement, new_stocks, privous_state, transaction)
 
-    @classmethod
-    def _backtrack_stock(cls, privous_state: 'State', company_code: str):
-        """자신의 이전 state들 중에서 company_code를 가지고 있는 state를 찾아 evaluated_price와 해당 state를 반환합니다.
-
-        만약 그러한 state가 없다면 ValueError를 내보냅니다.
-        이 방식 대신 privous_state에 없다면 오류를 내는 것이 더욱 빠르고 현실적으로 원하는 경우이기 때문에 사용되지는 않습니다.
-        """
-        state_backtrack = privous_state
-        while True:  # 작동 확인하기
-            try:
-                evaluated_price, _ = state_backtrack.stocks[company_code]
-            except KeyError:
-                if state_backtrack is state_backtrack.privous_state:
-                    raise ValueError(f'No data about "{company_code}" behind this state.')
-                state_backtrack = state_backtrack.privous_state
-            else:
-                logging.warning(f'"{company_code}: No price data on that day. '
-                                f'The price data of last transaction({state_backtrack}, {state_backtrack.stocks[company_code]}) is used.')
-                return evaluated_price, state_backtrack
-
 
 INITIAL_STATE = State(datetime(1900, 1, 1), 0, 0, 0, {}, None, None)  # type: ignore  # TODO: State의 prev_state에 None 가능하게 하기
