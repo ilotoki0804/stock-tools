@@ -24,8 +24,9 @@
 
 from __future__ import annotations
 import logging
-from typing import Literal, Generic, TypeVar
+from typing import Iterator, Literal, Generic, TypeVar
 from dataclasses import dataclass
+from collections.abc import Iterable
 
 
 Start = TypeVar("Start", int, None)
@@ -33,15 +34,20 @@ Stop = TypeVar("Stop", int, None)
 
 
 @dataclass(unsafe_hash=True)
-class RangePlus(Generic[Start, Stop]):
+class RangePlus(Iterable, Generic[Start, Stop]):
+    """python의 range와 달리 무한한 값을 지원하고 is_in_range를 지원합니다. 하지만 Sequence가 아닌 Iterable입니다.
+
+    infinite: 값이 앞뒤로 무한하게 만들고 싶다면 infinite는 True가 됩니다.
+    """
     start: Start
     stop: Stop
-    step: int
+    step: int = 1
     infinite: bool = False
 
     def __post_init__(self) -> None:
         if self.start is None and self.stop is None:
             raise TypeError("Start and stop cannot be None at same time.")
+
         if (
             self.start is not None
             and self.stop is not None
@@ -53,11 +59,13 @@ class RangePlus(Generic[Start, Stop]):
                 f"(stop - start) % step == {value_unmatched}"
             )
         self._step_start = self.stop if self.start is None else self.start
-        self.curr_value: int | None = None
 
     def is_in_range(self, price: int) -> bool:
-        return (self.start is None or self.start <= price) and (
-            self.stop is None or price < self.stop
+        """값이 이 함수의 행동 변경 안에 있는지 확인합니다."""
+        return (
+            self.infinite
+            or (self.start is None or self.start <= price)
+            and (self.stop is None or price < self.stop)
         )
 
     def __contains__(self, price: int) -> bool:
@@ -74,22 +82,14 @@ class RangePlus(Generic[Start, Stop]):
 
         return price in range(self.start, self.stop, self.step)
 
-    def __iter__(self) -> RangePlus:
-        if self.start is None:
-            raise ValueError("Cannot iterate because start is None.")
-        new = RangePlus(self.start, self.stop, self.step, self.infinite)
-        new.curr_value = self.start
-        return new
+    def __iter__(self) -> Iterator:
+        if self.start is None or self.infinite:
+            raise ValueError("Cannot iterate because start is None or front and back is infinite.")
 
-    def __next__(self) -> int:
-        if self.curr_value is None:
-            raise TypeError("Cannot iterate because it's not passed through iter().")
-
-        self.curr_value += self.step
-        if self.stop is not None and self.curr_value >= self.stop:
-            raise StopIteration
-
-        return self.curr_value
+        curr_value = self.start
+        while True if self.stop is None else (curr_value < self.stop):
+            yield curr_value
+            curr_value += self.step
 
 
 PRICE_UNITS: set[RangePlus[int, int] | RangePlus[int, None]] = {
