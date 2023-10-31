@@ -55,8 +55,8 @@ class Transaction:
             return
 
         if isinstance(self.sell_price, str):
+            # 주식 시장에서 온 값은 항상 다양한 주가 정책을 만족하기 때문에 다른 검사가 필요하지 않다.
             self.sell_price = int(price[SIGNIFICANT_PRICE_NAMES[self.sell_price]])
-            self.is_sell_price_evaluated = True
             return
 
         if (
