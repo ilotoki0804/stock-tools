@@ -86,12 +86,6 @@ fetch_prices_by_datetime은 다음과 같이 사용할 수 있습니다.
 ```python
 from datetime import datetime
 import mojito
-from stocks.data_management import _fetch_prices_unsafe, fetch_prices_by_datetime
-
-broker = mojito.KoreaInvestment(**KEY)
-
-from datetime import datetime
-import mojito
 from stocks import KEY
 from stocks.data_management import _fetch_prices_unsafe, fetch_prices_by_datetime
 
@@ -114,6 +108,8 @@ mojito 모듈과 이 부분에서 다르니 주의하세요.
 PriceCache모듈은 다음과 같이 사용이 가능합니다.
 
 ```python
+from datetime import datetime
+
 from stocks import PriceCache
 
 broker = mojito.KoreaInvestment(**KEY)
