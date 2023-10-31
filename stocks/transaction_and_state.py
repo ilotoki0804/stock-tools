@@ -126,11 +126,15 @@ class State:
                 + transaction.amount
             )
             if new_stock_count == 0:
+                # 딕셔너리의 값을 변경하기 때문에 .copy()가 필수적임.
                 stocks = privous_state.stocks.copy()
                 try:
                     del stocks[transaction.company_code]
                 except KeyError:
                     print(f"KeyError occured. {stocks=}, {transaction.company_code=}")
+            elif new_stock_count < 0:
+                raise ValueError(f"Stock count cannot be below zero. "
+                                 f"The number of {transaction.company_code} is {new_stock_count}.")
             else:
                 stocks = privous_state.stocks | {
                     transaction.company_code: (new_stock_count, transaction.sell_price)
