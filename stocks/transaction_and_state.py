@@ -74,6 +74,11 @@ class Transaction:
                 f"sell_price: {self.sell_price}, highest price: {SIGNIFICANT_PRICE_NAMES['high']}, lowest price: {SIGNIFICANT_PRICE_NAMES['low']}"
             )
 
+        if check_price_unit:
+            self.sell_price = adjust_price_unit(self.sell_price, alert=alert, **adjust_price_unit_kwargs)
+        self.is_sell_price_evaluated = True
+        return
+
 
 @dataclass
 class State:
