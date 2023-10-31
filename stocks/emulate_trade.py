@@ -12,6 +12,7 @@ def emulate_trade(
     price_cache: PriceCache,
     transactions: list[Transaction] | pd.DataFrame,
     initial_state: State | None = None,
+    final_date: datetime | None = None,
     only_if_transaction_exists: bool = False,
 ) -> list[State]:
     """거래를 모사해 거래의 결과와 진행 상황을 확인합니다. transactions와 관련한 설명은 Transaction dataclass를 확인하세요.
@@ -36,9 +37,11 @@ def emulate_trade(
     states = [initial_state]
     dates: set[datetime] = set(transactions_df["date"].unique())
     # min과 max 대신 transactions_df['date'][0]와 transactions_df['date'][-1]를 사용할 수도 있음.
-    for day_diff in range(
-        (min(dates) - standard_date).days, (max(dates) - standard_date).days + 1
-    ):
+    start_day_diff = (initial_state.date - standard_date
+                      if initial_state is not INITIAL_STATE else min(dates) - standard_date).days
+    end_day_diff = (final_date - standard_date
+                    if final_date is not None else max(dates) - standard_date).days
+    for day_diff in range(start_day_diff, end_day_diff + 1):
         date = standard_date + timedelta(day_diff)
         if not only_if_transaction_exists and date not in dates:
             states.append(
@@ -47,17 +50,11 @@ def emulate_trade(
             continue
 
         transactions_of_this_date = transactions_df[transactions_df["date"] == date]
-        # sourcery skip
-        for i in range(
-            len(transactions_of_this_date.index)
-        ):  # df.index는 1부터 시작할 수도 있지만 iloc은 무조건 0부터 시작함.
-            states.append(
-                State.from_state_and_transaction(
-                    price_cache,
-                    date,
-                    states[-1],
-                    Transaction(*transactions_of_this_date.iloc[i - 1]),
-                )
-            )
+        states += [State.from_state_and_transaction(
+            price_cache,
+            date,
+            states[-1],
+            Transaction(*args),
+        ) for args in transactions_of_this_date.iloc]
 
     return states
