@@ -6,7 +6,7 @@ import logging
 
 from . import PriceCache, adjust_price_unit
 from .exceptions import InvalidPriceError
-from .data_management import PriceDict
+from .fetch import PriceDict
 
 SIGNIFICANT_PRICE_NAMES = {
     "low": "stck_lwpr",
