@@ -4,6 +4,8 @@ from typing import Literal, Annotated
 from dataclasses import dataclass
 import logging
 
+import numpy as np
+
 from . import PriceCache, adjust_price_unit
 from .exceptions import InvalidPriceError
 from .fetch import PriceDict
@@ -59,19 +61,18 @@ class Transaction:
             self.sell_price = int(price[SIGNIFICANT_PRICE_NAMES[self.sell_price]])
             return
 
-        if (
-            price[SIGNIFICANT_PRICE_NAMES["low"]]
+        # numpy의 int64는 int의 subclass가 아니기에 각종 assertion에서 별별 오류를 다 만들어 냄.
+        # 이 구문으로 int64를 python integer로 변경함.
+        self.sell_price = int(self.sell_price)
+        if not (
+            int(price[SIGNIFICANT_PRICE_NAMES["low"]])
             <= self.sell_price
-            <= price[SIGNIFICANT_PRICE_NAMES["high"]]
+            <= int(price[SIGNIFICANT_PRICE_NAMES["high"]])
         ):
-            if check_price_unit:
-                self.sell_price = adjust_price_unit(self.sell_price, alert=alert, **adjust_price_unit_kwargs)
-            return
-
-        raise InvalidPriceError(
-            "Manual sell_price should be lower then or equal to highest price and greater then or equal to lowest price in daily."
-            f"sell_price: {self.sell_price}, highest price: {SIGNIFICANT_PRICE_NAMES['high']}, lowest price: {SIGNIFICANT_PRICE_NAMES['low']}"
-        )
+            raise InvalidPriceError(
+                "Manual sell_price should be lower then or equal to highest price and greater then or equal to lowest price in daily."
+                f"sell_price: {self.sell_price}, highest price: {SIGNIFICANT_PRICE_NAMES['high']}, lowest price: {SIGNIFICANT_PRICE_NAMES['low']}"
+            )
 
 
 @dataclass
