@@ -50,11 +50,14 @@ def emulate_trade(
             continue
 
         transactions_of_this_date = transactions_df[transactions_df["date"] == date]
-        states += [State.from_state_and_transaction(
-            price_cache,
-            date,
-            states[-1],
-            Transaction(*args),
-        ) for args in transactions_of_this_date.iloc]
-
+        # 리스트 컴프리헨션으로 바꾸면 오류가 생기니 하지 말 것.
+        states.extend(
+            State.from_state_and_transaction(
+                price_cache,
+                date,
+                states[-1],
+                Transaction(*args),
+            )
+            for args in transactions_of_this_date.iloc
+        )
     return states
