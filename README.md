@@ -348,6 +348,7 @@ args = monkey_investor(
     total_invest_count=36,  # 총 투자수
     seed=10,  # 랜덤값의 시드. None일 경우 별도로 정하지 않음.
 )
+```
 
 `fetch_prices_by_datetime`와는 다르게 투자 종료일을 포함합니다. 주의해 주세요.
 
