@@ -17,13 +17,13 @@ pip install -r requirements.txt
 
 ### 업데이트
 
-루트 폴더에서 터미널을 열고 `git fetch`를 입력해 주세요.
+루트 디렉토리에서 터미널을 열고 `git fetch`를 입력해 주세요.
 
 아무런 메시지도 뜨지 않는다면 이미 최신 상태였다는 의미이고 무언가가 나타난다면 업데이트되었다는 의미입니다.
 
 ### keys.json
 
-KEY를 사용하려면 루트 디렉토리에 `keys.json`이 있어야 합니다.
+KEY 상수를 사용하려면 루트 디렉토리에 `keys.json`이 있어야 합니다.
 
 우리 팀의 `keys.json`은 디스코드에 업로드되어 있으니 사용하시면 됩니다.
 
@@ -77,7 +77,7 @@ PriceCache과 fetch_prices_by_datetime의 차이점은 기간으로 불러올 �
 캐싱이란 데이터를 서버에서 불러온 후 만약 이미 전에 불러온 데이터라면 서버를 경유하지 않고 미리 가지고 있던 데이터에서 가져오는 것을 의미합니다.
 fetch_prices_by_datetime는 캐싱이 되지 않지만 PriceCache는 캐싱이 됩니다.
 
-캐싱을 사용한다면 속도를 높일 수 있기 때문에 특별한 경우를 제외하면 fetch_prices_by_datetime 대신 PriceCache를 사용하는 것을 권장합니다.
+캐싱을 사용한다면 같은 데이터를 여러 번 사용하는 경우 속도를 높일 수 있기 때문에 특별한 경우를 제외하면 fetch_prices_by_datetime 대신 PriceCache를 사용하는 것을 권장합니다.
 
 #### fetch_prices_by_datetime 사용하기
 
@@ -112,17 +112,17 @@ from datetime import datetime
 
 from stocks import PriceCache
 
-broker = mojito.KoreaInvestment(**KEY)
-price_cache = PriceCache(
-    broker=broker,
-    default_company_code=None,  # 기본 종목 코드. 만약 설정한다면 get_price에서 company_code를 설정하지 않아도 됨.
-    alert_different_day=False,  # 만약 기본 날짜와 다른 날짜가 나온다면 경고를 할 것인지 결정함. 나중에 삭제될 수 있음.
-)
-
-# 혹은 from_broker_kwargs를 사용할 수도 있습니다.
 price_cache = PriceCache.from_keys_json(
     default_company_code='005930', # 기본 종목 코드가 설정되었기 때문에 get_price에서 company_code를 생략할 수도 있음.
     alert_different_day=True,
+)
+
+# 혹은 brocker를 직접 넘겨줄 수도 있음.
+broker = mojito.KoreaInvestment(**KEY)
+price_cache = PriceCache(
+    broker=broker,
+    default_company_code=None,  # None이기 때문에 get_price에서는 항상 company_code를 정의해야 함.
+    alert_different_day=False,  # 만약 기본 날짜와 다른 날짜가 나온다면 경고를 할 것인지 결정함. 나중에 삭제될 수 있음.
 )
 
 price_cache.get_price(
@@ -173,11 +173,11 @@ price_cache.get_price(
 * acml_tr_pbmn: 누적 거래 대금
 * prtt_rate: 분할 비율 (아마 액면분할 시 그 비율을 의미하는 것으로 보임)
 * mod_yn: 분할변경여부 (액면분할 여부로 추정됨)
-* prdy_vrss_sign: 전일 대비 부호 (1 : 상한, 2 : 상승, 3 : 보합, 4 : 하한, 5 : 하락)
+* prdy_vrss_sign: 전일 대비 부호 (1: 상한, 2: 상승, 3: 보합, 4: 하한, 5: 하락)
 * prdy_vrss: 전일 대비
 * revl_issu_reas: 재평가사유코드
 
-모든 값을 일차적으로 string 결과를 반환한다는 점을 잊지 마세요.
+모든 값을 일차적으로 string을 반환한다는 점을 잊지 마세요.
 
 ### Transaction Dataclass
 
@@ -211,7 +211,7 @@ Transaction(
     datetime(2022, 11, 10),  # 2022년 11월 10일에
     '005930',  # 삼성전자를
     3,  # 3개 매수한다.
-    'open',  # 일봉의 고가로
+    'close',  # 일봉의 종가로
 )
 Transaction(
     datetime(2023, 10, 7),  # 2021년 1월 30일에
@@ -240,25 +240,9 @@ State의 상태들은 다음과 같습니다.
 
 #### State 예시
 
-* 실제로 State를 직접 정의해야 하는 상황은 드믊니다. State가 무엇인지만 알면 충분합니다.
+* 실제로 State를 직접 정의해야 하는 상황은 드뭅니다. State가 무엇인지만 알면 충분합니다.
 
-예를 들어 다음과 같이 State를 정의할 수 있습니다.
-
-```python
-from stocks.transaction_and_state import State, Transaction
-from datetime import datetime
-
-State(
-    date=datetime(2022, 6, 12),  # 2022년 6월 12일
-    total_appraisement=994170,  # 총 평가액 994170원 (stocks에 의존하는 값)
-    budget=249170,  # 주식 평가액을 포함하지 않은 예산 249170원
-    stocks={'086520': (10, 74500)},  # 평가액 74500원의 삼성전자 주식 보유 중
-    privous_state=State(...),  # 어떤 privous_state를 가짐
-    transaction=None,  # 전 State와 이번 State 사이에 transaction은 없음.
-)
-```
-
-하지만 직접 State를 정의하는 것은 힘들기 때문에 `State.from_state_and_transaction`을 사용할 수 있습니다.
+`State.from_previous_state`을 이용해 정의하는 방법은 다음과 같습니다.
 
 ```python
 from stocks import KEY
@@ -267,7 +251,7 @@ from datetime import datetime
 
 price_cache = PriceCache.from_keys_json(**KEY)
 
-State.from_state_and_transaction(
+State.from_previous_state(
     price_cache,
     datetime(2022, 6, 12),  # 2022년 6월 12일
     None,  # 이전 상태 없음
@@ -345,3 +329,133 @@ print(result)
 # 6  {'date': 2023-05-30 00:00:00, 'company_code': ...  
 # 7  {'date': 2023-07-15 00:00:00, 'company_code': ...  
 ```
+
+### 원숭이 투자자
+
+원숭이 투자자란 무작위로 주식을 사거나 파는 모의 투자자를 의미합니다.
+
+원숭이 투자자를 통해 자신의 알고리즘이 효율적인지 테스트해볼 수 있습니다.
+
+사용법은 다음과 같습니다.
+
+```python
+args = monkey_investor(
+    price_cache=price_cache,
+    company_code='005930',  # 투자할 회사의 종목 코드
+    start_day=datetime(2021, 1, 1),  # 투자 시작일
+    end_day=datetime(2021, 12, 31),  # 투자 종료일 (이 값을 포함함)
+    invest_amount=(100, 30),  # 투자량, 자료: (평균, 표준편차)
+    total_invest_count=36,  # 총 투자수
+    seed=10,  # 랜덤값의 시드. None일 경우 별도로 정하지 않음.
+)
+
+`fetch_prices_by_datetime`와는 다르게 투자 종료일을 포함합니다. 주의해 주세요.
+
+이 함수는 emulate_trade를 실행하지는 않으며, emulate_trade에 바로 사용할 수 있는 인자를 내보냅니다.
+
+이를 unpacking으로 emulate_trade에 넣어 실행할 수 있습니다.
+
+```python
+args = monkey_investor(
+    price_cache,
+    '005930',
+    datetime(2021, 1, 1),
+    datetime(2021, 12, 31),
+    (100, 30),
+    36,
+    1,
+)
+result = pd.DataFrame(emulate_trade(*args))
+```
+
+#### 응용
+
+여러 원숭이 투자자들을 생성한 뒤 주식 자체의 값과 비교하는 코드는 다음과 같이 작성이 가능합니다.
+
+```python
+# 원숭이 투자자를 10개 생성
+args_list = (monkey_investor(
+    price_cache,
+    '005930',
+    datetime(2021, 1, 1),
+    datetime(2021, 12, 31),
+    (100, 30),
+    36,
+    1000 + i,
+) for i in range(10))
+results = [pd.DataFrame(emulate_trade(*args)) for args in args_list]
+
+# 주식의 가격 변동을 확인함.
+initial_state = State.from_previous_state(price_cache, datetime(2021, 1, 1), None, None)
+transactions = [Transaction(datetime(2021, 1, 1), company_code='005930', amount=300, sell_price='open')]
+
+stock_itself = pd.DataFrame(emulate_trade(price_cache, transactions, initial_state, datetime(2021, 12, 31)))
+
+# 플롯 생성
+total_appraisements = [result['total_appraisement'] for result in results]
+
+df = pd.DataFrame()
+for i, total_appraisement in enumerate(total_appraisements, 1):
+    df[f'Monkey #{i}'] = total_appraisement
+df['Stock Price'] = stock_itself['total_appraisement']
+
+df = df.set_index(stock_itself['date'])
+
+df.plot(figsize=(10, 8), grid=True, style=[':'] * 10 + ['b-'])
+```
+
+생성된 그래프는 다음과 같습니다.
+![Plot shows total appraisement](images/monkey_investors.png)
+
+### 다양한 데이터로 플롯 그리기
+
+한 원숭이 투자자에 대한 주식 보유수와 주식 평가액으로 그린 플롯은 다음과 같습니다.
+
+```python
+from datetime import datetime
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from stocks import emulate_trade, PriceCache
+from stocks.monkey_investor import monkey_investor
+
+price_cache = PriceCache.from_keys_json()
+
+args = monkey_investor(
+    price_cache,
+    '005930',
+    datetime(2021, 1, 1),
+    datetime(2021, 12, 31),
+    (100, 30),
+    36,
+    1234,
+)
+result = pd.DataFrame(emulate_trade(*args))
+
+fig, ax1 = plt.subplots()
+
+color = 'tab:red'
+ax1.set_xlabel('date')
+ax1.set_ylabel('stock amount', color='tab:red')
+ax1.plot(result['date'], [stock.get('005930', (0, 0))[0] for stock in result['stocks']], color=color)
+ax1.set_ylim(-1500, 1500)
+ax1.tick_params(axis='y', labelcolor=color)
+
+ax2 = ax1.twinx()
+
+color = 'tab:blue'
+ax2.set_ylabel('total appraisement', color='tab:blue')
+ax2.plot(result['date'],
+         [total_appraisement for total_appraisement in result['total_appraisement']], color=color)
+ax2.set_ylim(-15_000_000, 15_000_000)
+ax2.tick_params(axis='y', labelcolor=color)
+
+fig.tight_layout()
+plt.grid(True)
+plt.show()
+```
+
+생성된 그래프는 다음과 같습니다.
+
+![plot about multiple data](images/multi_data.png)
