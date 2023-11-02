@@ -45,14 +45,14 @@ def emulate_trade(
         date = standard_date + timedelta(day_diff)
         if not only_if_transaction_exists and date not in dates:
             states.append(
-                State.from_state_and_transaction(price_cache, date, states[-1], None)
+                State.from_previous_state(price_cache, date, states[-1], None)
             )
             continue
 
         transactions_of_this_date = transactions_df[transactions_df["date"] == date]
         # 리스트 컴프리헨션으로 바꾸면 오류가 생기니 하지 말 것.
         states.extend(
-            State.from_state_and_transaction(
+            State.from_previous_state(
                 price_cache,
                 date,
                 states[-1],

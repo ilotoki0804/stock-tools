@@ -59,6 +59,6 @@ def monkey_investor(
         # 마지막 거래에서는 모든 주식을 청산하도록 함.
         transactions[-1].amount -= total_amount
 
-    initial_state = State.from_state_and_transaction(price_cache, start_day, None, None)
+    initial_state = State.from_previous_state(price_cache, start_day, None, None)
     # return emulate_trade(price_cache, transactions, initial_state, end_day)
     return (price_cache, transactions, initial_state, end_day)

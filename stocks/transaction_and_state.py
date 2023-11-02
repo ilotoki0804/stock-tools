@@ -95,7 +95,7 @@ class State:
     transaction: Transaction | None
 
     @classmethod
-    def from_state_and_transaction(
+    def from_previous_state(
         cls,
         price_cache: PriceCache,
         date: datetime,
