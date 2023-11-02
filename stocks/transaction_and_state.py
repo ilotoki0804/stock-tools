@@ -101,6 +101,7 @@ class State:
         date: datetime,
         privous_state: State | None,
         transaction: Transaction | None,
+        validate_stock_count: bool = True,
     ) -> State:
         """몇 가지 정보를 주면 total_appraisement나 stocks을 계산해 주는 constructor입니다."""
         if privous_state is None:
@@ -122,7 +123,7 @@ class State:
             ), "Maybe evaluate_sell_price didn't work well."
 
             new_stock_count = (
-                privous_state.stocks.get(transaction.company_code, (0, transaction.sell_price))[0]
+                privous_state.stocks.get(transaction.company_code, (0, 0))[0]
                 + transaction.amount
             )
             if new_stock_count == 0:
@@ -132,7 +133,7 @@ class State:
                     del stocks[transaction.company_code]
                 except KeyError:
                     print(f"KeyError occured. {stocks=}, {transaction.company_code=}")
-            elif new_stock_count < 0:
+            elif validate_stock_count and new_stock_count < 0:
                 raise ValueError(f"Stock count cannot be below zero. "
                                  f"The number of {transaction.company_code} is {new_stock_count}.")
             else:
