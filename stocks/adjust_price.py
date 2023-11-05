@@ -1,5 +1,4 @@
-"""지정가 매수 시 값을 호가단위에 가격을 맞춥니다.
-"""
+"""지정가 매수 시 값을 호가단위에 가격을 맞춥니다."""
 
 from __future__ import annotations
 import logging
