@@ -1,5 +1,6 @@
 from __future__ import annotations
 from datetime import datetime, timedelta
+import logging
 from typing import Literal, TypedDict
 
 import mojito
@@ -34,6 +35,8 @@ def _fetch_prices_unsafe(
 ) -> list[PriceDict]:
     """fetch_prices_by_datetime와 거의 같지만 조회할 데이터가 100을 넘어갈 경우의 안전성을 보장하지 않습니다."""
     end_day -= timedelta(1)
+    if (start_day - end_day).days >= 100 and date_type == "D":
+        logging.warning("Unsafe operation. Data can be truncated. Use `fetch_prices_by_datetime` to make operation safe.")
     response = broker.fetch_ohlcv(
         company_code,
         date_type,
