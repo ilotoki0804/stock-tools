@@ -42,7 +42,7 @@ def _fetch_prices_unsafe(
     )
     try:
         if response["output2"][0] == {}:
-            error_massage = "data received from mojito is invalid."
+            error_massage = "data received from mojito is invalid. Try again later is only solution currently."
             if all(price == {} for price in response["output2"]):
                 error_massage = "All of the " + error_massage
             else:
