@@ -8,3 +8,7 @@ class NoTransactionError(StockProjectError):
 
 class InvalidPriceError(Exception):
     """Price is invalid. Maybe your sell price goes beyond limit."""
+
+
+class MojitoInvalidResponseError(StockProjectError):
+    """Mojito giving a program invalid data."""

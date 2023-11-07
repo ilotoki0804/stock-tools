@@ -4,6 +4,8 @@ from typing import Literal, TypedDict
 
 import mojito
 
+from stocks.exceptions import MojitoInvalidResponseError
+
 DATE_FORMAT = r"%Y%m%d"
 
 
@@ -39,6 +41,13 @@ def _fetch_prices_unsafe(
         end_day.strftime(DATE_FORMAT),
     )
     try:
+        if response["output2"][0] == {}:
+            error_massage = "data received from mojito is invalid."
+            if all(price == {} for price in response["output2"]):
+                error_massage = "All of the " + error_massage
+            else:
+                error_massage = "The " + error_massage
+            raise MojitoInvalidResponseError(error_massage)
         return response["output2"]
     except KeyError:
         values = company_code, date_type, start_day.strftime(DATE_FORMAT), end_day.strftime(DATE_FORMAT)
