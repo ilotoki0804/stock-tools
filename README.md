@@ -103,7 +103,7 @@ fetch_prices_by_datetime(
 여기에서 주의해야 할 점은 파이썬의 `range()`나 slicing처럼 end_day에 그 당일은 포함되지 않는다는 점입니다.
 mojito 모듈과 이 부분에서 다르니 주의하세요.
 
-### PriceCache 사용하기
+#### PriceCache 사용하기
 
 PriceCache모듈은 다음과 같이 사용이 가능합니다.
 
@@ -140,7 +140,7 @@ price_cache.get_price(
 )
 ```
 
-### 불러오는 데이터
+#### 불러오는 데이터
 
 불러오는 데이터는 다음과 같습니다.
 
@@ -178,6 +178,10 @@ price_cache.get_price(
 * revl_issu_reas: 재평가사유코드
 
 모든 값을 일차적으로 string을 반환한다는 점을 잊지 마세요.
+
+#### MojitoInvalidResponseError
+
+모히토 모듈은 가끔씩 비정상적인 데이터를 결과로 내놓습니다. 이는 현재로서는 기다리는 것 외엔 해결 방법이 없습니다.
 
 ### Transaction Dataclass
 
@@ -234,7 +238,7 @@ State의 상태들은 다음과 같습니다.
 * budget: 예산으로, 현재 수중에 돈이 얼마나 있는지를 나타낸 금액입니다.
     이 값을 0으로 놓으면 total_appraisement가 음수일 경우 손실, 양수일 경우 이익이 되어 계산하기에 직관적입니다.
 * stocks: 주식들입니다. type은 `dict[str, tuple[int, int]]`로 `dict[종목 코드, tuple[주수, 현재가]]`입니다.
-    주수는 음수가 될 수도 있습니다.
+    주수는 음수가 될 수 없습니다.
 * privous_state: 이전 State입니다. None일 수도 있습니다.
 * transaction: 해당 State의 stocks가 변경되는 데에 어떤 transaction이 기여했을 때 해당 transaction의 값입니다.
 
@@ -334,7 +338,7 @@ print(result)
 
 원숭이 투자자란 무작위로 주식을 사거나 파는 모의 투자자를 의미합니다.
 
-원숭이 투자자를 통해 자신의 알고리즘이 효율적인지 테스트해볼 수 있습니다.
+원숭이 투자자와의 비교를 통해 자신의 알고리즘이 효율적인지 테스트해볼 수 있습니다.
 
 사용법은 다음과 같습니다.
 
@@ -460,3 +464,58 @@ plt.show()
 생성된 그래프는 다음과 같습니다.
 
 ![plot about multiple data](images/multi_data.png)
+
+### 주식 통계 계산하기
+
+MDD, CAGR, 주식 변동성은 `stock_statistics` 모듈로 계산할 수 있습니다.
+
+```python
+from datetime import datetime
+
+import mojito
+
+from stocks import KEY
+from stocks.emulate_trade import emulate_trade
+from stocks.monkey_investor import monkey_investor
+from stocks.stock_statistics import MDD, CAGR, stock_volatility
+from stocks.price_cache import PriceCache
+
+broker = mojito.KoreaInvestment(**KEY)
+price_cache = PriceCache(broker)
+
+args = list(monkey_investor(
+    price_cache=price_cache,
+    company_code='005930',
+    start_day=datetime(2021, 1, 1),
+    end_day=datetime(2021, 12, 31),
+    invest_amount=(100, 30),
+    total_invest_count=36,
+    seed=10,
+))
+
+# Changing initial state
+args[2].budget = 100_000_000  # type: ignore
+args[2].total_appraisement = 100_000_000  # type: ignore
+
+states = emulate_trade(*args)  # type: ignore
+
+print(MDD(states))
+print(CAGR(states))
+print(stock_volatility(broker, '009530', 'D', datetime(2021, 1, 1), datetime(2021, 12, 31)))
+```
+
+### 주차별 Changelog
+
+주의: 기능을 사용하기 전에 `git fetch`를 통해 업데이트해주세요.
+
+1. 3주차 (~23/11/07)
+
+    PriceDict 추가, PriceCache에 from_keys_json 추가, PriceCache의 get_price의 리턴값 변경, 여러 모듈 이름 변경, numpy int64 관련 버그 수정, Transaction에 check_price_unit 추가, stocks의 count가 음수가 되지 않도록 변경, emulate_trade에 final_date 추가, monkey_investor 및 stock_statistics 추가
+
+1. 2주차 (~23/10/30)
+
+    State, Transaction, emulate_trade 추가
+
+1. 1주차
+
+    프로젝트 시작, KEY 추가, adjust_price_unit 함수 추가
