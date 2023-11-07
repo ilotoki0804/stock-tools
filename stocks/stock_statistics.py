@@ -13,13 +13,13 @@ from .transaction_and_state import State, SIGNIFICANT_PRICE_NAMES
 def MDD(states: list[State] | pd.DataFrame) -> float:
     states = pd.DataFrame(states) if isinstance(states, list) else states
     total_appraisement = states['total_appraisement']
-    max_ = total_appraisement.max()
-    min_ = total_appraisement.min()
+    max_appraisement = total_appraisement.max()
+    min_appraisement = total_appraisement.min()
     if total_appraisement.iloc[0] == 0:
-        logging.warning("Budget starts with zero, so the value can be nonprecise.") 
-    elif min_ < 0:
-        logging.warning(f'Minimum value is negative, so the value can be nonprecise. min: {min_}')
-    return (max_ - min_) / max_
+        logging.warning("Budget starts with zero, so the value can be nonprecise.")
+    elif min_appraisement < 0:
+        logging.warning(f'Minimum value is negative, so the value can be nonprecise. min: {min_appraisement}')
+    return (max_appraisement - min_appraisement) / max_appraisement
 
 
 def CAGR(states: list[State] | pd.DataFrame) -> float:
