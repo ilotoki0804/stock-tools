@@ -91,7 +91,6 @@ class State:
     total_appraisement: int
     budget: int
     stocks: dict[str, tuple[Annotated[int, "count"], Annotated[int, "price"]]]
-    privous_state: State | None
     transaction: Transaction | None
 
     @classmethod
@@ -168,9 +167,8 @@ class State:
             budget + stock_appraisement,
             budget,
             new_stocks,
-            privous_state,
             transaction,
         )
 
 
-INITIAL_STATE = State(datetime(1900, 1, 1), 0, 0, {}, None, None)
+INITIAL_STATE = State(datetime(1900, 1, 1), 0, 0, {}, None)
