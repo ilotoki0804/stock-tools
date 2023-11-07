@@ -84,7 +84,7 @@ class Transaction:
 class State:
     """해당 날짜나 거래 후의 상태를 나타내는 dataclass입니다.
 
-    stocks의 count는 음수가 될 수도 있습니다.
+    stocks의 count는 음수가 될 수 **없습니다.**
     """
 
     date: datetime
