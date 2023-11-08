@@ -7,7 +7,7 @@ import pandas as pd
 
 from .fetch import DATE_FORMAT, _fetch_prices_unsafe, PriceDict
 from .exceptions import NoTransactionError
-from . import KEY
+from .key import KEY
 
 
 MAX_DATE_LIMIT = 100

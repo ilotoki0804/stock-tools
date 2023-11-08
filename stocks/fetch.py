@@ -5,7 +5,7 @@ from typing import Literal, TypedDict
 
 import mojito
 
-from stocks.exceptions import MojitoInvalidResponseError
+from .exceptions import MojitoInvalidResponseError
 
 DATE_FORMAT = r"%Y%m%d"
 

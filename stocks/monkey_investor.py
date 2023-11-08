@@ -6,11 +6,9 @@ import mojito
 import pandas as pd
 
 
-from stocks import KEY, PriceCache
-from stocks.transaction_and_state import SIGNIFICANT_PRICE_NAMES, Transaction, State
-
-broker = mojito.KoreaInvestment(**KEY)
-price_cache = PriceCache(broker)
+from .key import KEY
+from .price_cache import PriceCache
+from .transaction_and_state import SIGNIFICANT_PRICE_NAMES, Transaction, State
 
 
 def monkey_investor(
