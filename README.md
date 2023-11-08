@@ -334,6 +334,57 @@ print(result)
 # 7  {'date': 2023-07-15 00:00:00, 'company_code': ...  
 ```
 
+#### 주식 수수료 적용
+
+주식에는 수수료와 세금이 있습니다. 수수료는 매매와 매도 시 발생하고 세금은 매도 시에만 발생합니다. 두 금액은 매매한 금액에 비례합니다.
+
+[이 글](https://stockplus.com/m/investing_strategies/articles/1620?scope=all)에 따르면 일반적인 매수 수수료는 0.015%, 매도 수수료 + 세금은 코스피 기준 0.3015%이며, 이 경우 commission을 `(0.00015, 0.003015)`으로 설정해 수수료를 적용할 수 있습니다.
+
+다음과 같이 사용할 수 있습니다.
+
+```python
+from datetime import datetime
+import pandas as pd
+from stocks import monkey_investor, emulate_trade, PriceCache, State, Transaction
+
+price_cache = PriceCache.from_keys_json()
+
+args = monkey_investor(
+    price_cache,
+    '005930',
+    datetime(2021, 1, 1),
+    datetime(2021, 12, 31),
+    (100, 30),
+    36,
+    1000,
+)
+
+not_commission_considered_result = pd.DataFrame(emulate_trade(*args))
+commission_considered_result = pd.DataFrame(emulate_trade(*args, commission=(0.00015, 0.003015)))
+
+
+initial_state = State.from_previous_state(price_cache, datetime(2021, 1, 1), None, None)
+transactions = [Transaction(datetime(2021, 1, 1), company_code='005930', amount=300, sell_price='open')]
+
+stock_itself = pd.DataFrame(emulate_trade(price_cache, transactions, initial_state, datetime(2021, 12, 31)))
+
+
+total_appraisements = [result['total_appraisement'] for result in (not_commission_considered_result, commission_considered_result)]
+
+df = pd.DataFrame()
+df['Commission Not Considered'] = not_commission_considered_result['total_appraisement']
+df['Commission Considered'] = commission_considered_result['total_appraisement']
+df['Stock Price'] = stock_itself['total_appraisement']
+
+df = df.set_index(not_commission_considered_result['date'])
+
+df.plot(figsize=(10, 8), grid=True)
+```
+
+결과는 다음과 같습니다.
+
+![img](images/commission_considered.png)
+
 ### 원숭이 투자자
 
 원숭이 투자자란 무작위로 주식을 사거나 파는 모의 투자자를 의미합니다.
@@ -508,9 +559,9 @@ print(stock_volatility(broker, '009530', 'D', datetime(2021, 1, 1), datetime(202
 
 주의: 기능을 사용하기 전에 `git fetch`를 통해 업데이트해주세요.
 
-1. 3주차 (~23/11/07)
+1. 3주차 (~23/11/08)
 
-    PriceDict 추가, PriceCache에 from_keys_json 추가, PriceCache의 get_price의 리턴값 변경, 여러 모듈 이름 변경, numpy int64 관련 버그 수정, Transaction에 check_price_unit 추가, stocks의 count가 음수가 되지 않도록 변경, emulate_trade에 final_date 추가, monkey_investor 및 stock_statistics 추가
+    PriceDict 추가, PriceCache에 from_keys_json 추가, PriceCache의 get_price의 리턴값 변경, 여러 모듈 이름 변경, numpy int64 관련 버그 수정, Transaction에 check_price_unit 추가, stocks의 count가 음수가 되지 않도록 변경, emulate_trade에 final_date 추가, monkey_investor 및 stock_statistics 추가, commission 추가
 
 1. 2주차 (~23/10/30)
 
