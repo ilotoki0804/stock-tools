@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import mojito
 import pandas as pd
 
-from . import PriceCache
+from .price_cache import PriceCache
 from .transaction_and_state import SIGNIFICANT_PRICE_NAMES, Transaction, State, INITIAL_STATE
 
 
@@ -14,6 +14,7 @@ def emulate_trade(
     initial_state: State | None = None,
     final_date: datetime | None = None,
     only_if_transaction_exists: bool = False,
+    commission: tuple[float, float] | None = None,
 ) -> list[State]:
     """거래를 모사해 거래의 결과와 진행 상황을 확인합니다. transactions와 관련한 설명은 Transaction dataclass를 확인하세요.
 
@@ -57,6 +58,7 @@ def emulate_trade(
                 date,
                 states[-1],
                 Transaction(*args),
+                commission=commission,
             )
             for args in transactions_of_this_date.iloc
         )

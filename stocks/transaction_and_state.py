@@ -6,7 +6,8 @@ import logging
 
 import numpy as np
 
-from . import PriceCache, adjust_price_unit
+from .price_cache import PriceCache
+from .adjust_price import adjust_price_unit
 from .exceptions import InvalidPriceError
 from .fetch import PriceDict
 
@@ -100,9 +101,17 @@ class State:
         date: datetime,
         privous_state: State | None,
         transaction: Transaction | None,
-        validate_stock_count: bool = True,
+        validate: bool = True,
+        commission: tuple[Annotated[float, 'buy_commission'], Annotated[float, 'sell_commission']] | None = None,
     ) -> State:
-        """몇 가지 정보를 주면 total_appraisement나 stocks을 계산해 주는 constructor입니다."""
+        """몇 가지 정보를 주면 total_appraisement나 stocks을 계산해 주는 constructor입니다.
+
+        만약 주식 매수 수수료가 없고, 매도 수수료가 0.15%라면 commission은 (0., 0.0015)가 됩니다.
+
+        [이 글](https://stockplus.com/m/investing_strategies/articles/1620?scope=all)에 따르면
+        일반적인 매수 수수료는 0.015%, 매도 수수료 + 세금은 코스피 기준 0.3015%입니다.
+        이 경우 commission은 `(0.00015, 0.003015)`가 됩니다.
+        """
         if privous_state is None:
             budget = 0
             stocks = {}
@@ -119,7 +128,7 @@ class State:
             transaction.evaluate_sell_price(evaluated_price)
             assert isinstance(
                 transaction.sell_price, int
-            ), "Maybe evaluate_sell_price didn't work well."
+            ), "Evaluate_sell_price didn't work well."
 
             new_stock_count = (
                 privous_state.stocks.get(transaction.company_code, (0, 0))[0]
@@ -132,7 +141,7 @@ class State:
                     del stocks[transaction.company_code]
                 except KeyError:
                     print(f"KeyError occured. {stocks=}, {transaction.company_code=}")
-            elif validate_stock_count and new_stock_count < 0:
+            elif validate and new_stock_count < 0:
                 raise ValueError(f"Stock count cannot be below zero. "
                                  f"The number of {transaction.company_code} is {new_stock_count}.")
             else:
@@ -140,9 +149,36 @@ class State:
                     transaction.company_code: (new_stock_count, transaction.sell_price)
                 }
 
-            budget = privous_state.budget - transaction.amount * transaction.sell_price
+            if commission is None:
+                commission_rate = 1
+            else:
+                buy_commission, sell_commission = commission
+                assert validate and 0 < buy_commission < 1 and 0 < sell_commission < 1, (
+                    'Values of `commission` should be between 0 and 1.')
+                commission_to_use = buy_commission if transaction.amount > 0 else sell_commission
+                commission_rate = 1 - commission_to_use
+            budget = privous_state.budget - round(transaction.amount * transaction.sell_price * commission_rate)
             transaction_company = transaction.company_code
 
+        new_stocks, stock_appraisement = cls._evaluate_new_stock_prices(
+            date, stocks, transaction_company, price_cache)
+
+        return cls(
+            date,
+            budget + stock_appraisement,
+            budget,
+            new_stocks,
+            transaction,
+        )
+
+    @classmethod
+    def _evaluate_new_stock_prices(
+        cls,
+        date: datetime,
+        stocks: dict[str, tuple[int, int]],
+        transaction_company: str | None,
+        price_cache: PriceCache,
+    ) -> tuple[dict[str, tuple[int, int]], int]:
         new_stocks = {}
         stock_appraisement: int = 0
         for company_code, (count, price) in stocks.items():
@@ -162,13 +198,7 @@ class State:
             new_stocks[company_code] = count, evaluated_single_price
             stock_appraisement += count * evaluated_single_price
 
-        return cls(
-            date,
-            budget + stock_appraisement,
-            budget,
-            new_stocks,
-            transaction,
-        )
+        return new_stocks, stock_appraisement
 
 
 INITIAL_STATE = State(datetime(1900, 1, 1), 0, 0, {}, None)
