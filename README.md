@@ -67,9 +67,9 @@ Repo 내 examples.py에는 어떻게 adjust_price_unit를 사용하는지와 매
 
 가격을 불러오는 방식은 세 가지가 있습니다.
 
-1. transaction_and_state.PriceCache: 하루의 데이터를 알고 싶은 경우 사용
-1. data_management.fetch_prices_by_datetime: 기간의 데이터를 알고 싶은 경우 사용
-1. data_management._fetch_prices_unsafe: 위와 동일하고 더 빠르지만 100일 이상의 데이터를 불러올 수 없음.
+1. PriceCache: 하루의 데이터를 알고 싶은 경우 사용
+1. fetch.fetch_prices_by_datetime: 기간의 데이터를 알고 싶은 경우 사용
+1. fetch._fetch_prices_unsafe: 위와 동일하고 더 빠르지만 100일 이상의 데이터를 불러올 수 없음.
 
 일반적으로 3번을 사용할 일은 적을 것이고 PriceCache나 fetch_prices_by_datetime을 사용하게 될 가능성이 높습니다.
 
@@ -87,7 +87,7 @@ fetch_prices_by_datetime은 다음과 같이 사용할 수 있습니다.
 from datetime import datetime
 import mojito
 from stocks import KEY
-from stocks.data_management import _fetch_prices_unsafe, fetch_prices_by_datetime
+from stocks.fetch import _fetch_prices_unsafe, fetch_prices_by_datetime
 
 broker = mojito.KoreaInvestment(**KEY)
 
@@ -208,8 +208,8 @@ Transaction의 상태에는 다음과 같은 것들이 있습니다.
 예를 들어 다음과 같이 Transaction을 정의할 수 있습니다.
 
 ```python
-from stocks.transaction_and_state import Transaction
 from datetime import datetime
+from stocks import Transaction
 
 Transaction(
     datetime(2022, 11, 10),  # 2022년 11월 10일에
@@ -249,9 +249,8 @@ State의 상태들은 다음과 같습니다.
 `State.from_previous_state`을 이용해 정의하는 방법은 다음과 같습니다.
 
 ```python
-from stocks import KEY
-from stocks.transaction_and_state import State, Transaction, PriceCache
 from datetime import datetime
+from stocks import KEY, State, Transaction, PriceCache
 
 price_cache = PriceCache.from_keys_json(**KEY)
 
@@ -276,8 +275,7 @@ from datetime import datetime
 
 import pandas as pd
 
-from stocks import KEY, PriceCache, emulate_trade
-from stocks.transaction_and_state import Transaction, State
+from stocks import KEY, PriceCache, emulate_trade, Transaction, State
 
 # 하기 전에 keys.json이 있는지 꼭 확인하세요!!
 price_cache = PriceCache.from_keys_json()
@@ -473,8 +471,7 @@ from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
 
-from stocks import emulate_trade, PriceCache
-from stocks.monkey_investor import monkey_investor
+from stocks import emulate_trade, PriceCache, monkey_investor
 
 price_cache = PriceCache.from_keys_json()
 
@@ -525,11 +522,8 @@ from datetime import datetime
 
 import mojito
 
-from stocks import KEY
-from stocks.emulate_trade import emulate_trade
-from stocks.monkey_investor import monkey_investor
+from stocks import KEY, emulate_trade, monkey_investor, PriceCache
 from stocks.stock_statistics import MDD, CAGR, stock_volatility
-from stocks.price_cache import PriceCache
 
 broker = mojito.KoreaInvestment(**KEY)
 price_cache = PriceCache(broker)
@@ -561,7 +555,7 @@ print(stock_volatility(broker, '009530', 'D', datetime(2021, 1, 1), datetime(202
 
 1. 3주차 (~23/11/08)
 
-    PriceDict 추가, PriceCache에 from_keys_json 추가, PriceCache의 get_price의 리턴값 변경, 여러 모듈 이름 변경, numpy int64 관련 버그 수정, Transaction에 check_price_unit 추가, stocks의 count가 음수가 되지 않도록 변경, emulate_trade에 final_date 추가, monkey_investor 및 stock_statistics 추가, commission 추가
+    PriceDict 추가, PriceCache에 from_keys_json 추가, PriceCache의 get_price의 리턴값 변경, 여러 모듈 이름 변경, numpy int64 관련 버그 수정, Transaction에 check_price_unit 추가, stocks의 count가 음수가 되지 않도록 변경, emulate_trade에 final_date 추가, monkey_investor 및 stock_statistics 추가, commission 추가, 기본 import 개수 증가
 
 1. 2주차 (~23/10/30)
 
