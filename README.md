@@ -1,8 +1,10 @@
 # stock-project
 
-주식 관련 코드 모음입니다.
+알고리즘 주식 투자를 위한 여러 툴을 모아놓은 라이브러리입니다. 주식 데이터 불러오기, 호가 단위 맞추기, 주식 매매 시뮬레이션하기, 원숭이 투자자(임의로 사고 팔기를 반복하는 임의의 투자자), 통계 계산 외에도 많은 기능을 지원합니다.
 
 ## 설치 방법
+
+매우 초기 개발 단계이기에 pip 설치는 지원하지 않습니다.
 
 git을 설치하고 원하는 폴더에 터미널을 연 뒤 `git clone https://github.com/ilotoki0804/stock-project.git`를 치세요.
 
@@ -27,7 +29,7 @@ KEY 상수를 사용하려면 루트 디렉토리에 `keys.json`이 있어야 �
 
 우리 팀의 `keys.json`은 디스코드에 업로드되어 있으니 사용하시면 됩니다.
 
-`keys.json`은 다음과 같은 형식으로 되어 있습니다.
+`keys.json`은 다음과 같은 형식으로 만들면 됩니다.
 
 ```json
 {
@@ -38,6 +40,16 @@ KEY 상수를 사용하려면 루트 디렉토리에 `keys.json`이 있어야 �
 ```
 
 설명은 아래의 '사용법'을 참고하세요.
+
+### 기본 import
+
+이 라이브러리에는 많은 파일들이 있고, 대부분은 top level에서 사용할 수 있습니다. 그러나 `fetch` 모듈과 `stock_statistics` 모듈은 묶여 있는 것이 더욱 어울리는 모듈이기에 직접 import 가 필요합니다.
+
+```python
+from stocks import PriceCache, Transaction  # 대부분의 모듈들은 바로 사용 가능합니다.
+from stocks.fetch import fetch_prices_by_datetime  # fetch와 stock_statistics는 직접 import해야 합니다.
+from stocks.stock_statistics import stock_volatility
+```
 
 ## 사용법
 
@@ -74,7 +86,7 @@ Repo 내 examples.py에는 어떻게 adjust_price_unit를 사용하는지와 매
 일반적으로 3번을 사용할 일은 적을 것이고 PriceCache나 fetch_prices_by_datetime을 사용하게 될 가능성이 높습니다.
 
 PriceCache과 fetch_prices_by_datetime의 차이점은 기간으로 불러올 수 있는지와 아닌지의 차이도 있지만 결정적인 것은 바로 캐싱의 여부입니다.
-캐싱이란 데이터를 서버에서 불러온 후 만약 이미 전에 불러온 데이터라면 서버를 경유하지 않고 미리 가지고 있던 데이터에서 가져오는 것을 의미합니다.
+캐싱이란 데이터를 서버에서 불러온 후 만약 이미 전에 불러온 데이터라면 서버를 경유하지 않고 저장되어 있던 데이터에서 가져오는 것을 의미합니다.
 fetch_prices_by_datetime는 캐싱이 되지 않지만 PriceCache는 캐싱이 됩니다.
 
 캐싱을 사용한다면 같은 데이터를 여러 번 사용하는 경우 속도를 높일 수 있기 때문에 특별한 경우를 제외하면 fetch_prices_by_datetime 대신 PriceCache를 사용하는 것을 권장합니다.
