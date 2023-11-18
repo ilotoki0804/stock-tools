@@ -25,6 +25,7 @@ def emulate_trade(
         initial_state: 초기 상태를 정합니다. 이것으로 기존에 가지고 있던 주식이나 예산 등도 정의할 수 있습니다.
         only_if_transaction: 이 값이 False라면(기본값) transaction이 없는 날도 계산합니다.
             만약 True라면 Transaction이 있는 날만 계산합니다.
+        commission: 주식 수수료를 나타냅니다. 자세한 설명은 State의 docs를 확인하세요.
 
     Returns:
         State의 list를 반환합니다. Dataframe이 아니라는 점을 주의하세요.

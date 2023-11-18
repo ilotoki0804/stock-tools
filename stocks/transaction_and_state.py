@@ -109,8 +109,8 @@ class State:
         만약 주식 매수 수수료가 없고, 매도 수수료가 0.15%라면 commission은 (0., 0.0015)가 됩니다.
 
         [이 글](https://stockplus.com/m/investing_strategies/articles/1620?scope=all)에 따르면
-        일반적인 매수 수수료는 0.015%, 매도 수수료 + 세금은 코스피 기준 0.3015%입니다.
-        이 경우 commission은 `(0.00015, 0.003015)`가 됩니다.
+        일반적인 매수 수수료는 0.015%, 매도 시에는 수수료와 세금을 합쳐 코스피 기준 0.3015%입니다.
+        이 경우 commission을 `(0.00015, 0.003015)`으로 설정할 수 있습니다.
         """
         if privous_state is None:
             budget = 0
@@ -153,7 +153,7 @@ class State:
                 commission_rate = 1
             else:
                 buy_commission, sell_commission = commission
-                assert validate and 0 < buy_commission < 1 and 0 < sell_commission < 1, (
+                assert not validate or 0 < buy_commission < 1 and 0 < sell_commission < 1, (
                     'Values of `commission` should be between 0 and 1.')
                 commission_to_use = buy_commission if transaction.amount > 0 else sell_commission
                 commission_rate = 1 - commission_to_use
