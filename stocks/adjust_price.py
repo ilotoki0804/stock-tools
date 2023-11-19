@@ -70,7 +70,7 @@ class RangePlus(Iterable, Generic[Start, Stop]):
             curr_value += self.step
 
 
-PRICE_UNITS: set[RangePlus[int, int] | RangePlus[int, None]] = {
+PRICE_UNITS: list[RangePlus[int, int] | RangePlus[int, None]] = [
     RangePlus(1, 2000, 1),
     RangePlus(2000, 5000, 5),
     RangePlus(5000, 20000, 10),
@@ -78,7 +78,7 @@ PRICE_UNITS: set[RangePlus[int, int] | RangePlus[int, None]] = {
     RangePlus(50_000, 200_000, 1000),
     RangePlus(200_000, 500_000, 500),
     RangePlus(500_000, None, 1000),
-}
+]
 
 
 def adjust_price_unit(
@@ -139,7 +139,7 @@ def adjust_price_unit(
             curr_price_unit = price_unit
             is_price_unit_matched = price in price_unit
 
-    assert curr_price_unit is not None, "No matched price unit. Code has vulnerability."
+    assert curr_price_unit is not None, "There's no matched price unit. Code has vulnerability."
 
     if is_price_unit_matched:
         return price
