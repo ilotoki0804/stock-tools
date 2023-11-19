@@ -17,6 +17,7 @@ class RangePlus(Iterable, Generic[Start, Stop]):
 
     infinite: 값이 앞뒤로 무한하게 만들고 싶다면 infinite는 True가 됩니다.
     """
+
     start: Start
     stop: Stop
     step: int = 1
@@ -62,7 +63,9 @@ class RangePlus(Iterable, Generic[Start, Stop]):
 
     def __iter__(self) -> Iterator:
         if self.start is None or self.infinite:
-            raise ValueError("Cannot iterate because start is None or front and back is infinite.")
+            raise ValueError(
+                "Cannot iterate because start is None or front and back is infinite."
+            )
 
         curr_value = self.start
         while self.stop is None or curr_value < self.stop:
@@ -139,7 +142,8 @@ def adjust_price_unit(
             curr_price_unit = price_unit
             is_price_unit_matched = price in price_unit
 
-    assert curr_price_unit is not None, "There's no matched price unit. Code has vulnerability."
+    assert curr_price_unit is not None, (
+        "There's no matched price unit. Code has vulnerability.")
 
     if is_price_unit_matched:
         return price

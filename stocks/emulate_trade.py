@@ -1,11 +1,14 @@
 from __future__ import annotations
 from datetime import datetime, timedelta
 
-import mojito
 import pandas as pd
 
 from .price_cache import PriceCache
-from .transaction_and_state import SIGNIFICANT_PRICE_NAMES, Transaction, State, INITIAL_STATE
+from .transaction_and_state import (
+    Transaction,
+    State,
+    INITIAL_STATE,
+)
 
 
 def emulate_trade(
@@ -34,15 +37,23 @@ def emulate_trade(
     standard_date = datetime(1970, 1, 1)
     initial_state = initial_state or INITIAL_STATE
 
-    transactions_df = pd.DataFrame(transactions) if isinstance(transactions, list) else transactions
+    transactions_df = (
+        pd.DataFrame(transactions) if isinstance(transactions, list) else transactions
+    )
 
     states = [initial_state]
     dates: set[datetime] = set(transactions_df["date"].unique())
     # min과 max 대신 transactions_df['date'][0]와 transactions_df['date'][-1]를 사용할 수도 있음.
-    start_day_diff = (initial_state.date - standard_date
-                      if initial_state is not INITIAL_STATE else min(dates) - standard_date).days
-    end_day_diff = (final_date - standard_date
-                    if final_date is not None else max(dates) - standard_date).days
+    start_day_diff = (
+        initial_state.date - standard_date
+        if initial_state is not INITIAL_STATE
+        else min(dates) - standard_date
+    ).days
+    end_day_diff = (
+        final_date - standard_date
+        if final_date is not None
+        else max(dates) - standard_date
+    ).days
     for day_diff in range(start_day_diff, end_day_diff + 1):
         date = standard_date + timedelta(day_diff)
         if not only_if_transaction_exists and date not in dates:

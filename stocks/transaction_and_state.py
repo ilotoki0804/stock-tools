@@ -43,7 +43,7 @@ class Transaction:
         price: PriceDict,
         check_price_unit: bool = False,
         alert: bool = True,
-        **adjust_price_unit_kwargs
+        **adjust_price_unit_kwargs,
     ) -> None:
         """이 함수를 실행하면 sell_price가 무조건 정수 가격이 됩니다.
 
@@ -76,7 +76,9 @@ class Transaction:
             )
 
         if check_price_unit:
-            self.sell_price = adjust_price_unit(self.sell_price, alert=alert, **adjust_price_unit_kwargs)
+            self.sell_price = adjust_price_unit(
+                self.sell_price, alert=alert, **adjust_price_unit_kwargs
+            )
         self.is_sell_price_evaluated = True
         return
 
@@ -102,7 +104,10 @@ class State:
         privous_state: State | None,
         transaction: Transaction | None,
         validate: bool = True,
-        commission: tuple[Annotated[float, 'buy_commission'], Annotated[float, 'sell_commission']] | None = None,
+        commission: tuple[
+            Annotated[float, "buy_commission"], Annotated[float, "sell_commission"]
+        ]
+        | None = None,
     ) -> State:
         """몇 가지 정보를 주면 total_appraisement나 stocks을 계산해 주는 constructor입니다.
 
@@ -142,8 +147,10 @@ class State:
                 except KeyError:
                     print(f"KeyError occured. {stocks=}, {transaction.company_code=}")
             elif validate and new_stock_count < 0:
-                raise ValueError(f"Stock count cannot be below zero. "
-                                 f"The number of {transaction.company_code} is {new_stock_count}.")
+                raise ValueError(
+                    f"Stock count cannot be below zero. "
+                    f"The number of {transaction.company_code} is {new_stock_count}."
+                )
             else:
                 stocks = privous_state.stocks | {
                     transaction.company_code: (new_stock_count, transaction.sell_price)
@@ -153,15 +160,21 @@ class State:
                 commission_rate = 1
             else:
                 buy_commission, sell_commission = commission
-                assert not validate or 0 < buy_commission < 1 and 0 < sell_commission < 1, (
-                    'Values of `commission` should be between 0 and 1.')
-                commission_to_use = buy_commission if transaction.amount > 0 else sell_commission
+                assert (
+                    not validate or 0 < buy_commission < 1 and 0 < sell_commission < 1
+                ), "Values of `commission` should be between 0 and 1."
+                commission_to_use = (
+                    buy_commission if transaction.amount > 0 else sell_commission
+                )
                 commission_rate = 1 - commission_to_use
-            budget = privous_state.budget - round(transaction.amount * transaction.sell_price * commission_rate)
+            budget = privous_state.budget - round(
+                transaction.amount * transaction.sell_price * commission_rate
+            )
             transaction_company = transaction.company_code
 
         new_stocks, stock_appraisement = cls._evaluate_new_stock_prices(
-            date, stocks, transaction_company, price_cache)
+            date, stocks, transaction_company, price_cache
+        )
 
         return cls(
             date,
