@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "stock-tools"
+version = "0.1.0"
+description = "알고리즘 주식 투자를 위한 여러 툴을 모아놓은 라이브러리입니다."
+authors = ["ilotoki0804 <ilotoki0804@gmail.com>"]
+license = "MIT License"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "~=3.11.0"
+matplotlib = "^3.8.2"
+mojito2 = "^0.1.6"
+
+[tool.poetry.group.dev.dependencies]
+poetry = "^1.7.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
