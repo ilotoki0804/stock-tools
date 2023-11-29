@@ -126,19 +126,17 @@ from stocks import PriceCache
 
 price_cache = PriceCache.from_keys_json(
     default_company_code='005930', # 기본 종목 코드가 설정되었기 때문에 get_price에서 company_code를 생략할 수도 있음.
-    alert_different_day=True,
 )
 
-# 혹은 brocker를 직접 넘겨줄 수도 있음.
+# 혹은 brocker를 직접 넘겨줄 수도 있습니다.
 broker = mojito.KoreaInvestment(**KEY)
 price_cache = PriceCache(
     broker=broker,
     default_company_code=None,  # None이기 때문에 get_price에서는 항상 company_code를 정의해야 함.
-    alert_different_day=False,  # 만약 기본 날짜와 다른 날짜가 나온다면 경고를 할 것인지 결정함. 나중에 삭제될 수 있음.
 )
 
 price_cache.get_price(
-    # 값을 가져올 날짜
+    # 값을 가져올 날짜.
     day=datetime(2020, 1, 4),
 
     # 이 값은 만약 생략됐다면 default_company_code에 넘겨준 값을 사용하고, 만약 넘겨진 값이 없다면 오류가 남.
