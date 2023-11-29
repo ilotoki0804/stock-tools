@@ -14,20 +14,19 @@ MAX_DATE_LIMIT = 100
 
 
 class PriceCache:
-    """Price를 가지고 올 때마다 fetch하지 않고 caching을 이용해 더욱 빠르고 간편하게 정보를 가져올 수 있도록 하는 클래스입니다."""
+    """Price를 가지고 올 때마다 fetch하지 않고 caching해 더욱 빠르고 간편하게 정보를 가져올 수 있도록 하는 클래스입니다."""
+
     def __init__(
         self,
         broker: mojito.KoreaInvestment,
         default_company_code: str | None = None,
-        alert_different_day: bool = False,
     ) -> None:
         """company_code가 None이라면 get_price에서 company_code는 생략할 수 없습니다."""
         self.broker = broker
         self.default_company_code = default_company_code
         self._standard_day = datetime(1970, 1, 1)
         self._is_standard_day_smartly_defined = False
-        self._cache: dict[tuple[str, int], pd.DataFrame] = {}  # == dict[tuple[str, int], pd.DataFrame(list)]
-        self.alert_different_day = alert_different_day
+        self._cache: dict[tuple[str, int], pd.DataFrame] = {}
 
     @classmethod
     def from_broker_kwargs(
@@ -36,27 +35,27 @@ class PriceCache:
         alert_different_day: bool = False,
         **kwargs,
     ) -> PriceCache:
-        return cls(mojito.KoreaInvestment(**kwargs), default_company_code, alert_different_day)
+        return cls(mojito.KoreaInvestment(**kwargs), default_company_code)
 
     @classmethod
     def from_keys_json(
         cls,
         default_company_code: str | None = None,
         alert_different_day: bool = False,
-    ):
-        return cls(mojito.KoreaInvestment(**KEY), default_company_code, alert_different_day)
+    ) -> PriceCache:
+        return cls(mojito.KoreaInvestment(**KEY), default_company_code)
 
-    def set_standard_day(self, standard_day: datetime):
+    def set_standard_day(self, standard_day: datetime) -> None:
         """주의: 기존의 모든 cache가 삭제됩니다. standard_day는 임의의 날짜로 정할 수 있습니다(제약이 없습니다)."""
+        self._is_standard_day_smartly_defined = True
         self._standard_day = standard_day
         self._cache.clear()
 
-    @staticmethod
     def _get_day_category(
+        self,
         day: datetime,
-        standard_day: datetime,
     ) -> tuple[int, tuple[datetime, datetime]]:
-        date_category, mod = divmod((day - standard_day).days, 100)
+        date_category, mod = divmod((day - self._standard_day).days, 100)
 
         start_day = day - timedelta(mod)
         end_day = start_day + timedelta(100)
@@ -65,17 +64,28 @@ class PriceCache:
 
     def _store_cache_of_day(self, day: datetime, company_code: str) -> int:
         """캐시에 해당 day에 대한 캐시를 저장하고 date_category를 반환합니다."""
-        date_category, (start_day, end_day) = self._get_day_category(
-            day, self._standard_day
-        )
+        date_category, (start_day, end_day) = self._get_day_category(day)
 
         if (company_code, date_category) in self._cache:
             return date_category  # Cache hit!
 
-        self._cache[(company_code, date_category)] = pd.DataFrame(_fetch_prices_unsafe(
-            self.broker, company_code, "D", start_day, end_day
-        ))
+        self._cache[(company_code, date_category)] = pd.DataFrame(
+            _fetch_prices_unsafe(self.broker, company_code, "D", start_day, end_day)
+        )
         return date_category
+
+    def _before_get_price(self, day: datetime, company_code: str | None) -> str:
+        if not self._is_standard_day_smartly_defined and not self._cache:
+            self._standard_day = day - timedelta(50)
+            self._is_standard_day_smartly_defined = True
+
+        company_code = company_code or self.default_company_code
+        assert company_code, (
+            "`company_code` should be specified. "
+            "Specify parameter `company code` or set `default_company_code`."
+        )
+
+        return company_code
 
     def get_price(
         self,
@@ -104,14 +114,8 @@ class PriceCache:
                 'both'라면 과거로부터의 가장 현재와 가까운 과거 혹은 미래의 정보를 불러옵니다.
                 만약 과거와 현재의 거리가 같다면 과거의 데이터를 우선으로 불러옵니다.
         """
-        if not self._is_standard_day_smartly_defined and not self._cache:
-            self._standard_day = day - timedelta(50)
-            self._is_standard_day_smartly_defined = True
 
-        company_code = company_code or self.default_company_code
-        assert (
-            company_code
-        ), "`company_code` should be specified. Give `company code` to parameter or set `default_company_code`."
+        company_code = self._before_get_price(day, company_code)
 
         date_category = self._store_cache_of_day(day, company_code)
 
@@ -120,35 +124,34 @@ class PriceCache:
         if not result.empty:
             return result.squeeze().to_dict()
 
+        return self._find_suit_day(date_direction, nearest_day_threshold, day, company_code)
+
+    def _find_suit_day(self, date_direction, nearest_day_threshold, day, company_code) -> PriceDict:
+        def try_get_price_from(day: datetime):
+            try:
+                return_value = self.get_price(
+                    day, company_code, nearest_day_threshold=0
+                )
+            except NoTransactionError:
+                return None
+            else:
+                return return_value
+
         day_diff = None
-        for day_diff in range(
-            1,
-            (MAX_DATE_LIMIT if nearest_day_threshold is None else nearest_day_threshold)
-            + 1,
-        ):
+        nearest_day_threshold = (
+            MAX_DATE_LIMIT
+            if nearest_day_threshold is None else nearest_day_threshold
+        )
+        for day_diff in range(1, nearest_day_threshold + 1):
             if date_direction in {"future", "both"}:
-                try:
-                    return_value = self.get_price(
-                        day + timedelta(day_diff), company_code, nearest_day_threshold=0
-                    )
-                except NoTransactionError:
-                    pass
-                else:
-                    if self.alert_different_day:
-                        print(f"Get price from {day + timedelta(day_diff)} instead {day}.")
-                    return return_value
+                result = try_get_price_from(day + timedelta(day_diff))
+                if result is not None:
+                    return result
 
             if date_direction in {"past", "both"}:
-                try:
-                    return_value = self.get_price(
-                        day - timedelta(day_diff), company_code, nearest_day_threshold=0
-                    )
-                except NoTransactionError:
-                    pass
-                else:
-                    if self.alert_different_day:
-                        print(f"Get price from {day - timedelta(day_diff)} instead {day}.")
-                    return return_value
+                result = try_get_price_from(day - timedelta(day_diff))
+                if result is not None:
+                    return result
 
         if day_diff is None:
             raise NoTransactionError(
@@ -156,6 +159,32 @@ class PriceCache:
                 "Increase `nearest_day_threshold` if you want to get near data."
             )
 
-        raise NoTransactionError(
-            f"There's no transactions between {day - timedelta(day_diff)} and {day + timedelta(day_diff)}."
-        )
+        raise NoTransactionError("There's no transactions between "
+                                 f"{day - timedelta(day_diff)} "
+                                 f"and {day + timedelta(day_diff)}.")
+
+    def get_prices_between_range(
+        self,
+        start_day: datetime,
+        end_day: datetime,
+        company_code: str | None = None,
+    ) -> PriceDict:
+        company_code = self._before_get_price(start_day, company_code)
+
+        start_day_category, _ = self._get_day_category(start_day)
+        end_day_category, _ = self._get_day_category(end_day)
+        prices = []
+
+        curr_day = start_day
+        while end_day_category <= self._get_day_category(curr_day)[0]:
+            self._store_cache_of_day(curr_day, company_code)
+            curr_day += timedelta(100)
+
+        for day in 
+
+        for category in range(start_day_category + 1, end_day_category):
+            
+
+        
+
+        return {}
