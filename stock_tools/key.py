@@ -1,11 +1,20 @@
 import json
 import logging
+import os
 
-try:
-    with open("keys.json") as f:
-        KEY = json.load(f)
-except FileNotFoundError:
+if os.path.exists("keys.json"):
+    path = 'keys.json'
+elif os.path.exists("_keys.json"):
+    path = '_keys.json'
+else:
+    path = None
+
+
+if path is None:
     logging.error(
         "'keys.json' not found. In order to use KEY, root directory should contain 'keys.json'."
     )
     KEY = {}
+else:
+    with open(path) as f:
+        KEY = json.load(f)
