@@ -12,7 +12,7 @@ else:
 
 if path is None:
     logging.error(
-        "'keys.json' not found. In order to use KEY, root directory should contain 'keys.json'."
+        "'keys.json' or '_keys.json' is not found. In order to use KEY, root directory should contain 'keys.json'."
     )
     KEY = {}
 else:
