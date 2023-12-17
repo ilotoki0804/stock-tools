@@ -10,6 +10,12 @@ from .exceptions import MojitoInvalidResponseError
 DATE_FORMAT = r"%Y%m%d"
 
 
+class EXAMPLE_STOCK_CODES:
+    samsung = "005930"
+    kakao = "035720"
+    ecoprobm = "247540"
+
+
 class PriceDict(TypedDict):
     """
     broker.fetch_ohlcv로 주식의 정보를 요청했을 때 해당 함수의 반환값에 해당하는 딕셔너리입니다.
