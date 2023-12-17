@@ -17,5 +17,6 @@ build/
 *.egg-info
 
 token.dat
-/.stock
+/.stock-tools
+/.venv
 keys.json
