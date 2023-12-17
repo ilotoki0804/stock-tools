@@ -42,21 +42,21 @@ def emulate_trade(
     )
 
     states = [initial_state]
-    dates: set[datetime] = set(transactions_df["date"].unique())
+    transaction_exist_dates: set[datetime] = set(transactions_df["date"].unique())
     # min과 max 대신 transactions_df['date'][0]와 transactions_df['date'][-1]를 사용할 수도 있음.
     start_day_diff = (
         initial_state.date - standard_date
         if initial_state is not INITIAL_STATE
-        else min(dates) - standard_date
+        else min(transaction_exist_dates) - standard_date
     ).days
     end_day_diff = (
         final_date - standard_date
         if final_date is not None
-        else max(dates) - standard_date
+        else max(transaction_exist_dates) - standard_date
     ).days
     for day_diff in range(start_day_diff, end_day_diff + 1):
         date = standard_date + timedelta(day_diff)
-        if not only_if_transaction_exists and date not in dates:
+        if not only_if_transaction_exists and date not in transaction_exist_dates:
             states.append(
                 State.from_previous_state(price_cache, date, states[-1], None)
             )
