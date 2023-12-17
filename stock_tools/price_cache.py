@@ -1,6 +1,8 @@
 from __future__ import annotations
 from datetime import datetime, timedelta
+import pickle
 from typing import Literal
+from pathlib import Path
 
 import mojito
 import pandas as pd
@@ -15,6 +17,14 @@ MAX_DATE_LIMIT = 100
 
 class PriceCache:
     """Price를 가지고 올 때마다 fetch하지 않고 caching해 더욱 빠르고 간편하게 정보를 가져올 수 있도록 하는 클래스입니다."""
+    cache_prices: bool = True
+    cache_directory: Path = Path("_cache")
+
+    def __new__(cls, *args, **kwargs):
+        self = super().__new__(cls)
+        if cls.cache_prices:
+            self._control_cache_file('load')
+        return self
 
     def __init__(
         self,
@@ -32,7 +42,6 @@ class PriceCache:
     def from_broker_kwargs(
         cls,
         default_company_code: str | None = None,
-        alert_different_day: bool = False,
         **kwargs,
     ) -> PriceCache:
         return cls(mojito.KoreaInvestment(**kwargs), default_company_code)
@@ -41,7 +50,6 @@ class PriceCache:
     def from_keys_json(
         cls,
         default_company_code: str | None = None,
-        alert_different_day: bool = False,
     ) -> PriceCache:
         return cls(mojito.KoreaInvestment(**KEY), default_company_code)
 
@@ -62,6 +70,18 @@ class PriceCache:
 
         return date_category, (start_day, end_day)
 
+    def _control_cache_file(self, action: Literal["store", "delete", "load"]):
+        cache_location = self.cache_directory / f"{self.__class__.__name__}.pickle"
+        match action:
+            case "store":
+                self.__class__.cache_directory.mkdir(exist_ok=True, parents=True)
+                cache_location.write_bytes(pickle.dumps(self._cache))
+            case "delete":
+                cache_location.unlink(missing_ok=True)
+            case "load":
+                if cache_location.exists():
+                    self._cache = pickle.loads(cache_location.read_bytes())
+
     def _store_cache_of_day(self, day: datetime, company_code: str) -> int:
         """캐시에 해당 day에 대한 캐시를 저장하고 date_category를 반환합니다."""
         date_category, (start_day, end_day) = self._get_day_category(day)
@@ -72,6 +92,7 @@ class PriceCache:
         self._cache[(company_code, date_category)] = pd.DataFrame(
             _fetch_prices_unsafe(self.broker, company_code, "D", start_day, end_day)
         )
+        self._control_cache_file('store')
         return date_category
 
     def _before_get_price(self, day: datetime, company_code: str | None) -> str:
@@ -163,28 +184,28 @@ class PriceCache:
                                  f"{day - timedelta(day_diff)} "
                                  f"and {day + timedelta(day_diff)}.")
 
-    def get_prices_between_range(
-        self,
-        start_day: datetime,
-        end_day: datetime,
-        company_code: str | None = None,
-    ) -> PriceDict:
-        company_code = self._before_get_price(start_day, company_code)
+    # def get_prices_between_range(
+    #     self,
+    #     start_day: datetime,
+    #     end_day: datetime,
+    #     company_code: str | None = None,
+    # ) -> PriceDict:
+    #     company_code = self._before_get_price(start_day, company_code)
 
-        start_day_category, _ = self._get_day_category(start_day)
-        end_day_category, _ = self._get_day_category(end_day)
-        prices = []
+    #     start_day_category, _ = self._get_day_category(start_day)
+    #     end_day_category, _ = self._get_day_category(end_day)
+    #     prices = []
 
-        curr_day = start_day
-        while end_day_category <= self._get_day_category(curr_day)[0]:
-            self._store_cache_of_day(curr_day, company_code)
-            curr_day += timedelta(100)
+    #     curr_day = start_day
+    #     while end_day_category <= self._get_day_category(curr_day)[0]:
+    #         self._store_cache_of_day(curr_day, company_code)
+    #         curr_day += timedelta(100)
 
-        for day in 
+    #     for day in 
 
-        for category in range(start_day_category + 1, end_day_category):
+    #     for category in range(start_day_category + 1, end_day_category):
             
 
         
 
-        return {}
+    #     return {}
