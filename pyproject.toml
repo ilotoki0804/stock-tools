@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "stock-tools"
-version = "0.1.0"
+version = "0.1.1"
 description = "알고리즘 주식 투자를 위한 여러 툴을 모아놓은 라이브러리입니다."
 authors = ["ilotoki0804 <ilotoki0804@gmail.com>"]
 license = "MIT License"
@@ -10,6 +10,9 @@ readme = "README.md"
 python = "~=3.11.0"
 matplotlib = "^3.8.2"
 mojito2 = "^0.1.6"
+python-kis = "^1.0.6"
+numpy = "^1.26.2"
+pandas = "^2.1.3"
 
 [tool.poetry.group.dev.dependencies]
 poetry = "^1.7.1"
