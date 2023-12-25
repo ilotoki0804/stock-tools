@@ -72,7 +72,8 @@ class Transaction:
         ):
             raise InvalidPriceError(
                 "Manual sell_price should be lower then or equal to highest price and greater then or equal to lowest price in daily."
-                f"sell_price: {self.sell_price}, highest price: {SIGNIFICANT_PRICE_NAMES['high']}, lowest price: {SIGNIFICANT_PRICE_NAMES['low']}"
+                f"sell_price: {self.sell_price}, highest price: {price[SIGNIFICANT_PRICE_NAMES['high']]}, lowest price: {price[SIGNIFICANT_PRICE_NAMES['low']]}\n"
+                f"Prices: {price}"
             )
 
         if check_price_unit:
