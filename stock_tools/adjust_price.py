@@ -142,8 +142,9 @@ def adjust_price_unit(
             curr_price_unit = price_unit
             is_price_unit_matched = price in price_unit
 
-    assert curr_price_unit is not None, (
-        "There's no matched price unit. Code has vulnerability.")
+    assert (
+        curr_price_unit is not None
+    ), "There's no matched price unit. Code has vulnerability."
 
     if is_price_unit_matched:
         return price

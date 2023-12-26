@@ -11,8 +11,9 @@ def monkey_investor(
     company_code: str,
     start_day: datetime,
     end_day: datetime,
-    invest_amount: tuple[Annotated[float, "counts"],
-                         Annotated[float, "standard_deviation"]],
+    invest_amount: tuple[
+        Annotated[float, "counts"], Annotated[float, "standard_deviation"]
+    ],
     total_invest_count: int,
     seed: int | None = None,
 ) -> tuple[PriceCache, list[Transaction], State, datetime]:
@@ -29,8 +30,9 @@ def monkey_investor(
     seeded_random = random.Random(seed)
 
     standard_day = datetime(1970, 1, 1)
-    day_range = range((start_day - standard_day).days,
-                      (end_day - standard_day).days + 1)
+    day_range = range(
+        (start_day - standard_day).days, (end_day - standard_day).days + 1
+    )
 
     total_amount = 0
     transactions: list[Transaction] = []
@@ -41,8 +43,9 @@ def monkey_investor(
 
         # normalvariate의 결과값이 음수여도 상관없음.
         buy_or_sell = 1 if total_amount == 0 else seeded_random.choice((1, -1))
-        transaction_amount = round(seeded_random.normalvariate(*invest_amount)
-                                   * buy_or_sell)
+        transaction_amount = round(
+            seeded_random.normalvariate(*invest_amount) * buy_or_sell
+        )
         if total_amount + transaction_amount < 0:
             transaction_amount = -total_amount
         total_amount += transaction_amount
@@ -53,8 +56,11 @@ def monkey_investor(
             int(price[SIGNIFICANT_PRICE_NAMES["high"]]),
         )
 
-        transactions.append(Transaction(transaction_day, company_code,
-                                        transaction_amount, transaction_price))
+        transactions.append(
+            Transaction(
+                transaction_day, company_code, transaction_amount, transaction_price
+            )
+        )
 
     if transactions:
         # 마지막 거래에서는 모든 주식을 청산하도록 함.

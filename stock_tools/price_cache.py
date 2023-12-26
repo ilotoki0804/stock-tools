@@ -17,13 +17,14 @@ MAX_DATE_LIMIT = 100
 
 class PriceCache:
     """Price를 가지고 올 때마다 fetch하지 않고 caching해 더욱 빠르고 간편하게 정보를 가져올 수 있도록 하는 클래스입니다."""
+
     cache_prices: bool = True
     cache_directory: Path = Path("_cache")
 
     def __new__(cls, *args, **kwargs):
         self = super().__new__(cls)
         if cls.cache_prices:
-            self._control_cache_file('load')
+            self._control_cache_file("load")
         return self
 
     def __init__(
@@ -92,7 +93,7 @@ class PriceCache:
         self._cache[(company_code, date_category)] = pd.DataFrame(
             _fetch_prices_unsafe(self.broker, company_code, "D", start_day, end_day)
         )
-        self._control_cache_file('store')
+        self._control_cache_file("store")
         return date_category
 
     def _before_get_price(self, day: datetime, company_code: str | None) -> str:
@@ -145,9 +146,13 @@ class PriceCache:
         if not result.empty:
             return result.squeeze().to_dict()
 
-        return self._find_suit_day(date_direction, nearest_day_threshold, day, company_code)
+        return self._find_suit_day(
+            date_direction, nearest_day_threshold, day, company_code
+        )
 
-    def _find_suit_day(self, date_direction, nearest_day_threshold, day, company_code) -> PriceDict:
+    def _find_suit_day(
+        self, date_direction, nearest_day_threshold, day, company_code
+    ) -> PriceDict:
         def try_get_price_from(day: datetime):
             try:
                 return_value = self.get_price(
@@ -160,8 +165,7 @@ class PriceCache:
 
         day_diff = None
         nearest_day_threshold = (
-            MAX_DATE_LIMIT
-            if nearest_day_threshold is None else nearest_day_threshold
+            MAX_DATE_LIMIT if nearest_day_threshold is None else nearest_day_threshold
         )
         for day_diff in range(1, nearest_day_threshold + 1):
             if date_direction in {"future", "both"}:
@@ -180,9 +184,10 @@ class PriceCache:
                 "Increase `nearest_day_threshold` if you want to get near data."
             )
 
-        raise NoTransactionError("There's no transactions between "
-                                 f"{day - timedelta(day_diff)} "
-                                 f"and {day + timedelta(day_diff)}.")
+        raise NoTransactionError(
+            f"There's no transactions between {day - timedelta(day_diff)} "
+            f"and {day + timedelta(day_diff)}."
+        )
 
     # def get_prices_between_range(
     #     self,
@@ -201,11 +206,8 @@ class PriceCache:
     #         self._store_cache_of_day(curr_day, company_code)
     #         curr_day += timedelta(100)
 
-    #     for day in 
+    #     for day in
 
     #     for category in range(start_day_category + 1, end_day_category):
-            
-
-        
 
     #     return {}

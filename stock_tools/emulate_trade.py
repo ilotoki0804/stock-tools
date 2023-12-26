@@ -89,7 +89,7 @@ def emulate_trade(
     )
 
     states = [initial_state]
-    Rs = [(initial_state.date, 0.)]
+    Rs = [(initial_state.date, 0.0)]
     transaction_exist_dates: set[datetime] = set(transactions_df["date"].unique())
     state_after_last_transaction: State | None = None
     # min과 max 대신 transactions_df['date'][0]와 transactions_df['date'][-1]를 사용할 수도 있음.
@@ -108,11 +108,12 @@ def emulate_trade(
         if not only_if_transaction_exists and date not in transaction_exist_dates:
             state = State.from_previous_state(price_cache, date, states[-1], None)
             if state_after_last_transaction is None:
-                appraisement_diff_rate = 0.
+                appraisement_diff_rate = 0.0
             else:
                 # (700 - 1000) / 1000
                 appraisement_diff_rate = _calculate_appraisement_diff_rate(
-                    state_after_last_transaction.total_appraisement - state_after_last_transaction.budget,
+                    state_after_last_transaction.total_appraisement
+                    - state_after_last_transaction.budget,
                     state.total_appraisement - state_after_last_transaction.budget,
                 )
 
@@ -127,9 +128,9 @@ def emulate_trade(
             transaction = transactions_df.query("date > @date").iloc[0]
             adjusted_transaction = _adjust_transaction(price_cache, transaction, date)
 
-            transactions_df.loc[transactions_df.query("date > @date").index[0]] = pd.Series(
-                asdict(adjusted_transaction)
-            )
+            transactions_df.loc[
+                transactions_df.query("date > @date").index[0]
+            ] = pd.Series(asdict(adjusted_transaction))
 
             # continue를 넣지 말 것! 끝난 후 transaction이 처리될 수 있도록 하기 위함.
 
@@ -150,31 +151,37 @@ def emulate_trade(
 
 def _calculate_appraisement_diff_rate(
     stock_appriasement_after_last_transaction: int | float,
-    current_stock_appraisement: int | float
+    current_stock_appraisement: int | float,
 ) -> float:
     if stock_appriasement_after_last_transaction == current_stock_appraisement:
-        return 0.
+        return 0.0
 
     return (
         current_stock_appraisement - stock_appriasement_after_last_transaction
     ) / stock_appriasement_after_last_transaction
 
 
-def _adjust_transaction(price_cache: PriceCache, transaction: pd.Series | Transaction, new_date: datetime):
-    transaction_dict = asdict(transaction) if isinstance(transaction, Transaction) else transaction.to_dict()
-    del transaction_dict['sell_price']
-    del transaction_dict['_is_sell_price_evaluated']
-    transaction_dict['date'] = new_date
+def _adjust_transaction(
+    price_cache: PriceCache, transaction: pd.Series | Transaction, new_date: datetime
+):
+    transaction_dict = (
+        asdict(transaction)
+        if isinstance(transaction, Transaction)
+        else transaction.to_dict()
+    )
+    del transaction_dict["sell_price"]
+    del transaction_dict["_is_sell_price_evaluated"]
+    transaction_dict["date"] = new_date
 
     # 원래는 sell_price나 get_price에 여러가지 설정이 있지만 우선 기본값으로 상정함.
     # 만약 나중에 커스텀이 중요해지는 순간이 오면 수정이 불가피함.
     adjusted_transaction = Transaction(**transaction_dict, sell_price="close")
     adjusted_transaction.evaluate_sell_price(
         price_cache.get_price(
-            transaction_dict['date'],
-            transaction_dict['company_code'],
+            transaction_dict["date"],
+            transaction_dict["company_code"],
             None,
-            'past',
+            "past",
         )
     )
     return adjusted_transaction

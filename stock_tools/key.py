@@ -3,9 +3,9 @@ import logging
 import os
 
 if os.path.exists("keys.json"):
-    path = 'keys.json'
+    path = "keys.json"
 elif os.path.exists("_keys.json"):
-    path = '_keys.json'
+    path = "_keys.json"
 else:
     path = None
 

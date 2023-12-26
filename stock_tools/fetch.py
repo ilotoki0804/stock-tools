@@ -21,6 +21,7 @@ class PriceDict(TypedDict):
     broker.fetch_ohlcv로 주식의 정보를 요청했을 때 해당 함수의 반환값에 해당하는 딕셔너리입니다.
     _fetch_prices_unsafe와 fetch_prices_by_datetime 모두 이를 함수의 반환값으로 사용합니다.
     """
+
     stck_bsop_date: str
     stck_clpr: str
     stck_oprc: str
@@ -46,8 +47,10 @@ def _fetch_prices_unsafe(
     """fetch_prices_by_datetime와 거의 같지만 조회할 데이터가 100을 넘어갈 경우의 안전성을 보장하지 않습니다."""
     end_day -= timedelta(1)
     if (start_day - end_day).days >= 100 and date_type == "D":
-        logging.warning("Unsafe operation. Data can be truncated. "
-                        "Use `fetch_prices_by_datetime` to make operation safe.")
+        logging.warning(
+            "Unsafe operation. Data can be truncated. "
+            "Use `fetch_prices_by_datetime` to make operation safe."
+        )
     response = broker.fetch_ohlcv(
         company_code,
         date_type,
@@ -70,8 +73,10 @@ def _fetch_prices_unsafe(
             start_day.strftime(DATE_FORMAT),
             end_day.strftime(DATE_FORMAT),
         )
-        raise ValueError("Data is not fetched properly. "
-                         f"arguments: {values}, response: {response}")
+        raise ValueError(
+            "Data is not fetched properly. "
+            f"arguments: {values}, response: {response}"
+        )
 
 
 def fetch_prices_by_datetime(

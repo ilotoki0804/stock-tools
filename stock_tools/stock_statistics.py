@@ -18,8 +18,10 @@ def MDD(states: list[State] | pd.DataFrame) -> float:
     if total_appraisement.iloc[0] == 0:
         logging.warning("Budget starts with zero, so the value can be nonprecise.")
     elif min_appraisement < 0:
-        logging.warning("Minimum value is negative, so the value can be nonprecise."
-                        f"min: {min_appraisement}")
+        logging.warning(
+            "Minimum value is negative, so the value can be nonprecise."
+            f"min: {min_appraisement}"
+        )
     return (max_appraisement - min_appraisement) / max_appraisement
 
 
@@ -38,8 +40,7 @@ def CAGR(states: list[State] | pd.DataFrame) -> float:
         raise ValueError("Initial budget was 0, thus cannot get CAGR")
 
     total_earning_multiple: int = (
-        getter(last_day, "total_appraisement")
-        - getter(first_day, "total_appraisement")
+        getter(last_day, "total_appraisement") - getter(first_day, "total_appraisement")
     ) / getter(first_day, "budget")
     years_diff: float = (
         getter(last_day, "date") - getter(first_day, "date")
@@ -66,8 +67,10 @@ def stock_volatility(
         single_price = int(price[SIGNIFICANT_PRICE_NAMES[price_from]])
 
         if prev_single_price is not None:
-            print(f"{single_price - prev_single_price=}, {single_price=}, "
-                  f"{(single_price - prev_single_price) / single_price=}")
+            print(
+                f"{single_price - prev_single_price=}, {single_price=}, "
+                f"{(single_price - prev_single_price) / single_price=}"
+            )
             price_change_rates.append((single_price - prev_single_price) / single_price)
 
         prev_single_price = single_price
