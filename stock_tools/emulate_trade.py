@@ -1,6 +1,7 @@
 from __future__ import annotations
 from datetime import datetime, timedelta
 from dataclasses import asdict
+from typing import overload
 
 import pandas as pd
 
@@ -10,6 +11,45 @@ from .transaction_and_state import (
     State,
     INITIAL_STATE,
 )
+
+
+@overload
+def emulate_trade(
+    price_cache: PriceCache,
+    transactions: list[Transaction] | pd.DataFrame,
+    initial_state: State | None = None,
+    final_date: datetime | None = None,
+    only_if_transaction_exists: bool = False,
+    commission: tuple[float, float] | None = None,
+    panic_sell_rate: None = ...,
+) -> list[State]:
+    ...
+
+
+@overload
+def emulate_trade(
+    price_cache: PriceCache,
+    transactions: list[Transaction] | pd.DataFrame,
+    initial_state: State | None = None,
+    final_date: datetime | None = None,
+    only_if_transaction_exists: bool = False,
+    commission: tuple[float, float] | None = None,
+    panic_sell_rate: float = ...,
+) -> tuple[list[State], list[tuple[datetime, float]]]:
+    ...
+
+
+@overload
+def emulate_trade(
+    price_cache: PriceCache,
+    transactions: list[Transaction] | pd.DataFrame,
+    initial_state: State | None = None,
+    final_date: datetime | None = None,
+    only_if_transaction_exists: bool = False,
+    commission: tuple[float, float] | None = None,
+    panic_sell_rate: float | None = None,
+) -> list[State] | tuple[list[State], list[tuple[datetime, float]]]:
+    ...
 
 
 def emulate_trade(
