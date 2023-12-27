@@ -7,7 +7,7 @@
 
 from .adjust_price import RangePlus, PRICE_UNITS, adjust_price_unit
 from .emulate_trade import emulate_trade
-from .key import KEY
+from .key import KEY, OTHER_ENV
 from .monkey_investor import monkey_investor
 from .price_cache import MAX_DATE_LIMIT, PriceCache
 from .transaction_and_state import (
