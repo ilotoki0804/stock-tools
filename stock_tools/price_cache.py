@@ -35,9 +35,10 @@ class PriceCache:
         """company_code가 None이라면 get_price에서 company_code는 생략할 수 없습니다."""
         self.broker = broker
         self.default_company_code = default_company_code
-        self._standard_day = datetime(1970, 1, 1)
-        self._is_standard_day_smartly_defined = False
-        self._cache: dict[tuple[str, int], pd.DataFrame] = {}
+        if not hasattr(self, "_cache"):
+            self._standard_day = datetime(1970, 1, 1)
+            self._is_standard_day_smartly_defined = False
+            self._cache: dict[tuple[str, int], pd.DataFrame] = {}
 
     @classmethod
     def from_broker_kwargs(
@@ -76,12 +77,13 @@ class PriceCache:
         match action:
             case "store":
                 self.__class__.cache_directory.mkdir(exist_ok=True, parents=True)
-                cache_location.write_bytes(pickle.dumps(self._cache))
+                cache_location.write_bytes(pickle.dumps((self._cache, self._standard_day)))
             case "delete":
                 cache_location.unlink(missing_ok=True)
             case "load":
                 if cache_location.exists():
-                    self._cache = pickle.loads(cache_location.read_bytes())
+                    self._cache, self._standard_day = pickle.loads(cache_location.read_bytes())
+                    self._is_standard_day_smartly_defined = True
 
     def _store_cache_of_day(self, day: datetime, company_code: str) -> int:
         """캐시에 해당 day에 대한 캐시를 저장하고 date_category를 반환합니다."""
