@@ -35,7 +35,7 @@ def emulate_trade(
     only_if_transaction_exists: bool = False,
     commission: tuple[float, float] | None = None,
     panic_sell_rate: float = ...,
-) -> tuple[list[State], list[tuple[datetime, float]]]:
+) -> tuple[list[State], list[tuple[datetime, float]], pd.DataFrame]:
     ...
 
 
@@ -48,7 +48,7 @@ def emulate_trade(
     only_if_transaction_exists: bool = False,
     commission: tuple[float, float] | None = None,
     panic_sell_rate: float | None = None,
-) -> list[State] | tuple[list[State], list[tuple[datetime, float]]]:
+) -> list[State] | tuple[list[State], list[tuple[datetime, float]], pd.DataFrame]:
     ...
 
 
@@ -60,7 +60,7 @@ def emulate_trade(
     only_if_transaction_exists: bool = False,
     commission: tuple[float, float] | None = None,
     panic_sell_rate: float | None = None,
-) -> list[State] | tuple[list[State], list[tuple[datetime, float]]]:
+) -> list[State] | tuple[list[State], list[tuple[datetime, float]], pd.DataFrame]:
     """거래를 모사해 거래의 결과와 진행 상황을 확인합니다. transactions와 관련한 설명은 Transaction dataclass를 확인하세요.
 
     Args:
@@ -146,7 +146,7 @@ def emulate_trade(
             )
             states.append(state)
         state_after_last_transaction = states[-1]
-    return states if panic_sell_rate is None else (states, Rs)
+    return states if panic_sell_rate is None else (states, Rs, transactions_df)
 
 
 def _calculate_appraisement_diff_rate(
